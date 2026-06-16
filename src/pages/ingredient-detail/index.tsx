@@ -36,13 +36,12 @@ const IngredientDetailPage: React.FC = () => {
   const router = useRouter();
   const ingId = router.params.id as string;
 
-  const getIngredientById = useAppStore((s) => s.getIngredientById);
+  const ingredients = useAppStore((s) => s.ingredients);
   const restockIngredient = useAppStore((s) => s.restockIngredient);
   const restockRecords = useAppStore((s) => s.restockRecords);
   const products = useAppStore((s) => s.products);
-  const ingredients = useAppStore((s) => s.ingredients);
 
-  const ingredient = useMemo(() => (ingId ? getIngredientById(ingId) : undefined), [ingId, getIngredientById, ingredients]);
+  const ingredient = useMemo(() => (ingId ? ingredients.find((i) => i.id === ingId) : undefined), [ingId, ingredients]);
 
   const stockStatus = ingredient ? getStockStatus(ingredient.stock, ingredient.warningThreshold) : 'safe';
   const stockPercent = ingredient && ingredient.warningThreshold > 0

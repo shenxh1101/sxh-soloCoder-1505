@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, ScrollView } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
+import classnames from 'classnames';
 import { useAppStore } from '@/store';
 import { categoryLabels, categoryColors, formatPrice, roundTo, getStockStatus } from '@/utils';
 import styles from './index.module.scss';

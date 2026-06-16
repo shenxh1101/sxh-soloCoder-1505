@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView } from '@tarojs/components';
+import { View, Text, ScrollView, Picker } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { useAppStore } from '@/store';
@@ -32,11 +32,13 @@ const filterOptions: Array<{ key: FilterType; label: string }> = [
 
 const StockLogsPage: React.FC = () => {
   const stockLogs = useAppStore((s) => s.stockLogs);
+  const ingredients = useAppStore((s) => s.ingredients);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   });
+  const [filterIngId, setFilterIngId] = useState<string>('all');
 
   const dateStart = useMemo(() => {
     const [y, m, d] = selectedDate.split('-').map(Number);
@@ -45,15 +47,19 @@ const StockLogsPage: React.FC = () => {
 
   const dateEnd = useMemo(() => dateStart + 86400000, [dateStart]);
 
+  const ingredientOptions = useMemo(() => ['全部原料', ...ingredients.map((i) => i.name)], [ingredients]);
+  const currentIngIdx = filterIngId === 'all' ? 0 : ingredients.findIndex((i) => i.id === filterIngId) + 1;
+
   const dayLogs = useMemo(() => {
     return stockLogs
       .filter((log) => {
         if (log.createdAt < dateStart || log.createdAt >= dateEnd) return false;
         if (activeFilter !== 'all' && log.type !== activeFilter) return false;
+        if (filterIngId !== 'all' && log.ingredientId !== filterIngId) return false;
         return true;
       })
       .sort((a, b) => b.createdAt - a.createdAt);
-  }, [stockLogs, dateStart, dateEnd, activeFilter]);
+  }, [stockLogs, dateStart, dateEnd, activeFilter, filterIngId]);
 
   const daySummary = useMemo(() => {
     let restockTotal = 0;
@@ -99,6 +105,31 @@ const StockLogsPage: React.FC = () => {
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
   };
 
+  const handleCopyText = () => {
+    if (dayLogs.length === 0) {
+      Taro.showToast({ title: '无数据可复制', icon: 'none' });
+      return;
+    }
+    const [y, m, d] = selectedDate.split('-');
+    const ingName = filterIngId !== 'all' ? ` · ${ingredients.find((i) => i.id === filterIngId)?.name || ''}` : '';
+    let text = `📊 库存对账单 - ${m}月${d}日${ingName}\n`;
+    text += `━━━━━━━━━━━━━━━━\n`;
+    text += `入库：${daySummary.restockTotal}  出库：${daySummary.deductTotal}  笔数：${daySummary.count}\n`;
+    text += `━━━━━━━━━━━━━━━━\n`;
+    dayLogs.forEach((log) => {
+      const time = formatTime(log.createdAt);
+      const change = log.changeAmount > 0 ? `+${log.changeAmount}` : `${log.changeAmount}`;
+      text += `${time} ${log.ingredientName} ${typeLabelMap[log.type]} ${change}${log.unit} (${log.stockBefore}→${log.stockAfter}) ${log.source}\n`;
+    });
+    Taro.setClipboardData({ data: text, success: () => Taro.showToast({ title: '对账文本已复制', icon: 'success' }) });
+  };
+
+  const handleIngFilterChange = (e: any) => {
+    const idx = Number(e.detail.value);
+    if (idx === 0) setFilterIngId('all');
+    else setFilterIngId(ingredients[idx - 1]?.id || 'all');
+  };
+
   return (
     <View>
       <View className={styles.filterBar}>
@@ -106,6 +137,17 @@ const StockLogsPage: React.FC = () => {
           <View className={styles.dateNav} onClick={handlePrevDay}>‹</View>
           <Text className={styles.dateText}>{formatDisplayDate()}</Text>
           <View className={styles.dateNav} onClick={handleNextDay}>›</View>
+        </View>
+        <View className={styles.topActions}>
+          <Picker range={ingredientOptions} value={currentIngIdx} onChange={handleIngFilterChange}>
+            <View className={styles.ingFilterBtn}>
+              {filterIngId === 'all' ? '全部原料' : ingredients.find((i) => i.id === filterIngId)?.name || '全部原料'}
+              <Text style={{ fontSize: 18, marginLeft: 4 }}>▼</Text>
+            </View>
+          </Picker>
+          <View className={styles.copyBtn} onClick={handleCopyText}>
+            📋 复制对账
+          </View>
         </View>
       </View>
 
@@ -121,7 +163,7 @@ const StockLogsPage: React.FC = () => {
         ))}
       </View>
 
-      <ScrollView scrollY className={styles.pageContainer} style={{ height: 'calc(100vh - 200rpx)' }}>
+      <ScrollView scrollY className={styles.pageContainer} style={{ height: 'calc(100vh - 260rpx)' }}>
         {dayLogs.length === 0 ? (
           <View className={styles.emptyWrapper}>
             <View className={styles.emptyIcon}>📋</View>

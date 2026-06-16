@@ -74,6 +74,75 @@
   }
 }
 
+.compareCard {
+  margin: 0 $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  box-shadow: $shadow-card;
+
+  .cpTitle {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin-bottom: $spacing-sm;
+  }
+
+  .cpHeader {
+    display: flex;
+    padding-bottom: $spacing-xs;
+    border-bottom: 1rpx solid $color-divider;
+    margin-bottom: $spacing-xs;
+
+    .cpCol {
+      flex: 1;
+      text-align: center;
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+    }
+  }
+
+  .cpRow {
+    display: flex;
+    align-items: center;
+    padding: 8rpx 0;
+
+    .cpLabel {
+      flex: 1;
+      text-align: center;
+      font-size: $font-size-xs;
+      color: $color-text-secondary;
+      font-weight: $font-weight-medium;
+    }
+
+    .cpVal {
+      flex: 1;
+      text-align: center;
+      font-size: $font-size-sm;
+      color: $color-text-primary;
+    }
+
+    .cpBold {
+      font-weight: $font-weight-semibold;
+      font-size: $font-size-xs;
+    }
+
+    .cpUp {
+      color: #4CAF50;
+      font-weight: $font-weight-semibold;
+    }
+
+    .cpDown {
+      color: #F53F3F;
+      font-weight: $font-weight-semibold;
+    }
+
+    .cpFlat {
+      color: $color-text-tertiary;
+    }
+  }
+}
+
 .summaryCard {
   margin: $spacing-md $page-padding;
   background: linear-gradient(135deg, #FF8A50 0%, #FFB088 100%);

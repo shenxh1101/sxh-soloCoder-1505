@@ -4,13 +4,13 @@ import Taro, { useRouter } from '@tarojs/taro';
 import classnames from 'classnames';
 import { useAppStore } from '@/store';
 import { formatPrice, categoryLabels, categoryColors, roundTo } from '@/utils';
-import type { ProductCategory, SaleRecord } from '@/types';
+import type { ProductCategory } from '@/types';
 import styles from './index.module.scss';
 
 const SaleRecordsPage: React.FC = () => {
   const router = useRouter();
   const productIdParam = router.params.productId as string | undefined;
-  const productNameParam = router.params.productName as string | undefined;
+  const productNameParam = router.params.productName ? decodeURIComponent(router.params.productName as string) : undefined;
 
   const saleRecords = useAppStore((s) => s.saleRecords);
   const products = useAppStore((s) => s.products);
@@ -30,15 +30,13 @@ const SaleRecordsPage: React.FC = () => {
   const [filterProductId, setFilterProductId] = useState<string | undefined>(productIdParam);
   const [filterCategory, setFilterCategory] = useState<ProductCategory | 'all'>('all');
 
-  const startTs = useMemo(() => {
-    const [y, m, d] = startDate.split('-').map(Number);
+  const toTs = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
     return new Date(y, m - 1, d).getTime();
-  }, [startDate]);
+  };
 
-  const endTs = useMemo(() => {
-    const [y, m, d] = endDate.split('-').map(Number);
-    return new Date(y, m - 1, d).getTime() + 86400000;
-  }, [endDate]);
+  const startTs = useMemo(() => toTs(startDate), [startDate]);
+  const endTs = useMemo(() => toTs(endDate) + 86400000, [endDate]);
 
   const filteredRecords = useMemo(() => {
     return saleRecords.filter((r) => {
@@ -53,10 +51,7 @@ const SaleRecordsPage: React.FC = () => {
   }, [saleRecords, startTs, endTs, filterProductId, filterCategory, products]);
 
   const summary = useMemo(() => {
-    let totalCups = 0;
-    let totalRevenue = 0;
-    let totalCost = 0;
-    let totalProfit = 0;
+    let totalCups = 0, totalRevenue = 0, totalCost = 0, totalProfit = 0;
     filteredRecords.forEach((r) => {
       totalCups += r.quantity;
       totalRevenue += r.totalRevenue;
@@ -66,6 +61,67 @@ const SaleRecordsPage: React.FC = () => {
     const avgPerCup = totalCups > 0 ? roundTo(totalRevenue / totalCups, 2) : 0;
     return { totalCups, totalRevenue: roundTo(totalRevenue, 2), totalCost: roundTo(totalCost, 2), totalProfit: roundTo(totalProfit, 2), avgPerCup, orderCount: filteredRecords.length };
   }, [filteredRecords]);
+
+  const bestSeller = useMemo(() => {
+    const map = new Map<string, { name: string; qty: number }>();
+    filteredRecords.forEach((r) => {
+      const e = map.get(r.productId);
+      if (e) e.qty += r.quantity;
+      else map.set(r.productId, { name: r.productName, qty: r.quantity });
+    });
+    const arr = Array.from(map.values());
+    arr.sort((a, b) => b.qty - a.qty);
+    return arr[0];
+  }, [filteredRecords]);
+
+  const comparison = useMemo(() => {
+    const rangeDays = Math.round((endTs - startTs) / 86400000);
+    const prevStart = startTs - (rangeDays * 86400000);
+    const prevEnd = startTs;
+
+    const prevRecords = saleRecords.filter((r) => r.createdAt >= prevStart && r.createdAt < prevEnd);
+    let prevCups = 0, prevRevenue = 0, prevProfit = 0;
+    let prevBestName = '';
+    {
+      const map = new Map<string, { name: string; qty: number }>();
+      prevRecords.forEach((r) => {
+        prevCups += r.quantity;
+        prevRevenue += r.totalRevenue;
+        prevProfit += r.totalProfit;
+        const e = map.get(r.productId);
+        if (e) e.qty += r.quantity;
+        else map.set(r.productId, { name: r.productName, qty: r.quantity });
+      });
+      const arr = Array.from(map.values());
+      arr.sort((a, b) => b.qty - a.qty);
+      prevBestName = arr[0]?.name || '-';
+    }
+
+    const prevRangeLabel = (() => {
+      const s = new Date(prevStart);
+      const e = new Date(prevEnd - 1);
+      if (rangeDays === 1) return `昨天`;
+      return `${s.getMonth() + 1}/${s.getDate()}-${e.getMonth() + 1}/${e.getDate()}`;
+    })();
+    const curRangeLabel = (() => {
+      if (rangeDays === 1) return '今天';
+      const s = new Date(startTs);
+      const e = new Date(endTs - 1);
+      return `${s.getMonth() + 1}/${s.getDate()}-${e.getMonth() + 1}/${e.getDate()}`;
+    })();
+
+    const diff = (cur: number, prev: number) => prev === 0 ? (cur > 0 ? 100 : 0) : roundTo(((cur - prev) / prev) * 100, 0);
+    const diffTag = (val: number) => val > 0 ? `↑${val}%` : val < 0 ? `↓${Math.abs(val)}%` : '持平';
+
+    return {
+      curRangeLabel, prevRangeLabel,
+      cups: { cur: summary.totalCups, prev: prevCups, diff: diff(summary.totalCups, prevCups), tag: diffTag(diff(summary.totalCups, prevCups)) },
+      revenue: { cur: summary.totalRevenue, prev: roundTo(prevRevenue, 2), diff: diff(summary.totalRevenue, roundTo(prevRevenue, 2)), tag: diffTag(diff(summary.totalRevenue, roundTo(prevRevenue, 2))) },
+      profit: { cur: summary.totalProfit, prev: roundTo(prevProfit, 2), diff: diff(summary.totalProfit, roundTo(prevProfit, 2)), tag: diffTag(diff(summary.totalProfit, roundTo(prevProfit, 2))) },
+      curBest: bestSeller?.name || '-',
+      prevBest: prevBestName,
+    };
+  }, [startTs, endTs, saleRecords, summary, bestSeller]);
 
   const productOptions = ['全部产品', ...products.map((p) => p.name)];
   const currentProductIdx = filterProductId
@@ -127,6 +183,8 @@ const SaleRecordsPage: React.FC = () => {
   const startIdx = dateOptions.indexOf(startDate);
   const endIdx = dateOptions.indexOf(endDate);
 
+  const isToday = startDate === todayStr() && endDate === todayStr();
+
   return (
     <View>
       <View className={styles.filterBar}>
@@ -156,8 +214,8 @@ const SaleRecordsPage: React.FC = () => {
       </View>
 
       <View className={styles.quickRange}>
-        <View className={classnames(styles.qrBtn, startDate === dateOptions[0] && endDate === dateOptions[0] && styles.qrActive)} onClick={() => quickRange(1)}>今天</View>
-        <View className={classnames(styles.qrBtn, styles.qrActive)} onClick={() => quickRange(7)}>近7天</View>
+        <View className={classnames(styles.qrBtn, isToday && styles.qrActive)} onClick={() => quickRange(1)}>今天</View>
+        <View className={classnames(styles.qrBtn, !isToday && startDate !== todayStr() && styles.qrActive)} onClick={() => quickRange(7)}>近7天</View>
         <View className={styles.qrBtn} onClick={() => quickRange(30)}>近30天</View>
       </View>
 
@@ -200,17 +258,58 @@ const SaleRecordsPage: React.FC = () => {
               </View>
             </View>
 
+            {/* 时段对比 */}
+            <View className={styles.compareCard}>
+              <View className={styles.cpTitle}>📈 时段对比</View>
+              <View className={styles.cpHeader}>
+                <Text className={styles.cpCol} />
+                <Text className={styles.cpCol}>{comparison.curRangeLabel}</Text>
+                <Text className={styles.cpCol}>{comparison.prevRangeLabel}</Text>
+                <Text className={styles.cpCol}>变化</Text>
+              </View>
+              <View className={styles.cpRow}>
+                <Text className={styles.cpLabel}>出杯</Text>
+                <Text className={styles.cpVal}>{comparison.cups.cur}</Text>
+                <Text className={styles.cpVal}>{comparison.cups.prev}</Text>
+                <Text className={classnames(styles.cpVal, comparison.cups.diff > 0 ? styles.cpUp : comparison.cups.diff < 0 ? styles.cpDown : styles.cpFlat)}>
+                  {comparison.cups.tag}
+                </Text>
+              </View>
+              <View className={styles.cpRow}>
+                <Text className={styles.cpLabel}>营收</Text>
+                <Text className={styles.cpVal}>¥{comparison.revenue.cur}</Text>
+                <Text className={styles.cpVal}>¥{comparison.revenue.prev}</Text>
+                <Text className={classnames(styles.cpVal, comparison.revenue.diff > 0 ? styles.cpUp : comparison.revenue.diff < 0 ? styles.cpDown : styles.cpFlat)}>
+                  {comparison.revenue.tag}
+                </Text>
+              </View>
+              <View className={styles.cpRow}>
+                <Text className={styles.cpLabel}>毛利</Text>
+                <Text className={styles.cpVal}>¥{comparison.profit.cur}</Text>
+                <Text className={styles.cpVal}>¥{comparison.profit.prev}</Text>
+                <Text className={classnames(styles.cpVal, comparison.profit.diff > 0 ? styles.cpUp : comparison.profit.diff < 0 ? styles.cpDown : styles.cpFlat)}>
+                  {comparison.profit.tag}
+                </Text>
+              </View>
+              <View className={styles.cpRow}>
+                <Text className={styles.cpLabel}>热销</Text>
+                <Text className={classnames(styles.cpVal, styles.cpBold)}>{comparison.curBest}</Text>
+                <Text className={classnames(styles.cpVal, styles.cpBold)}>{comparison.prevBest}</Text>
+                <Text className={styles.cpVal}>-</Text>
+              </View>
+            </View>
+
             <View className={styles.sectionTitle}>共 {summary.orderCount} 笔订单，{summary.totalCups} 杯</View>
 
             {filteredRecords.map((record) => {
               const cat = getCategory(record.productId);
               const catColor = cat ? categoryColors[cat] : null;
-              const isToday = new Date(record.createdAt).toDateString() === new Date().toDateString();
+              const recordIsToday = new Date(record.createdAt).toDateString() === new Date().toDateString();
               return (
                 <View key={record.id} className={styles.recordCard}>
                   <View className={styles.rcTop}>
                     <Text className={styles.rcName}>{record.productName}</Text>
-                    <Text className={styles.rcTime}>{isToday ? formatTime(record.createdAt) : `${formatDate(record.createdAt)} ${formatTime(record.createdAt)}`}</Text>
+                    <Text className={styles.rcTime}>{recordIsToday ? formatTime(record.createdAt) : `${formatDate(record.createdAt)} ${formatTime(record.createdAt)}`}</Text>
                   </View>
                   {cat && catColor && (
                     <View className={styles.rcTag} style={{ background: catColor.bg, color: catColor.color }}>

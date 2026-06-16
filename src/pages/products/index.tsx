@@ -15,7 +15,6 @@ const categoryList: Array<{ key: ProductCategory; label: string; icon: string }>
 const ProductsPage: React.FC = () => {
   const products = useAppStore((state) => state.products);
   const ingredients = useAppStore((state) => state.ingredients);
-  const getProductCost = useAppStore((state) => state.getProductCost);
 
   const groupedProducts = useMemo(() => {
     const groups: Record<string, Product[]> = {
@@ -30,6 +29,15 @@ const ProductsPage: React.FC = () => {
     });
     return groups;
   }, [products]);
+
+  const getProductCost = (product: Product) => {
+    let total = 0;
+    product.recipe.forEach((r) => {
+      const ing = ingredients.find((i) => i.id === r.ingredientId);
+      if (ing) total += ing.pricePerUnit * r.amount;
+    });
+    return { totalCost: Number(total.toFixed(4)) };
+  };
 
   const getIngredientName = (id: string) => {
     return ingredients.find((i) => i.id === id)?.name || '未知';

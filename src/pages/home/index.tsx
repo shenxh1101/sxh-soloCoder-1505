@@ -18,14 +18,31 @@ const HomePage: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<ProductCategory | 'all'>('all');
   const products = useAppStore((state) => state.products);
   const ingredients = useAppStore((state) => state.ingredients);
-  const getProductCost = useAppStore((state) => state.getProductCost);
   const makeSale = useAppStore((state) => state.makeSale);
-  const canMakeProduct = useAppStore((state) => state.canMakeProduct);
-  const getWarningIngredients = useAppStore((state) => state.getWarningIngredients);
-  const getTodayStats = useAppStore((state) => state.getTodayStats);
 
-  const todayStats = useMemo(() => getTodayStats(), [getTodayStats, ingredients, products]);
-  const warningList = useMemo(() => getWarningIngredients(), [getWarningIngredients, ingredients]);
+  const todayStats = useMemo(() => {
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const saleRecords = useAppStore.getState().saleRecords;
+    const todayRecords = saleRecords.filter((r) => r.createdAt >= todayStart);
+    let totalRevenue = 0;
+    let totalCost = 0;
+    let totalCups = 0;
+    todayRecords.forEach((r) => {
+      totalRevenue += r.totalRevenue;
+      totalCost += r.totalCost;
+      totalCups += r.quantity;
+    });
+    return {
+      totalRevenue: roundTo(totalRevenue, 2),
+      totalCost: roundTo(totalCost, 2),
+      totalProfit: roundTo(totalRevenue - totalCost, 2),
+      orderCount: todayRecords.length,
+      totalCups,
+    };
+  }, [ingredients, products]);
+
+  const warningList = useMemo(() => ingredients.filter((i) => i.stock <= i.warningThreshold), [ingredients]);
 
   const filteredProducts = useMemo(() => {
     if (activeCategory === 'all') return products;
@@ -33,8 +50,33 @@ const HomePage: React.FC = () => {
   }, [products, activeCategory]);
 
   const getProductMeta = (product: Product) => {
-    const { totalCost } = getProductCost(product.id);
-    const { canMake, minServings, limitingName } = canMakeProduct(product.id);
+    let totalCost = 0;
+    product.recipe.forEach((r) => {
+      const ing = ingredients.find((i) => i.id === r.ingredientId);
+      if (ing) totalCost += ing.pricePerUnit * r.amount;
+    });
+    totalCost = Number(totalCost.toFixed(4));
+
+    let minServings = Infinity;
+    let limitingName: string | undefined;
+    let canMake = true;
+    for (const r of product.recipe) {
+      const ing = ingredients.find((i) => i.id === r.ingredientId);
+      if (!ing || ing.stock <= 0) {
+        canMake = false;
+        limitingName = ing?.name || '未知原料';
+        minServings = 0;
+        break;
+      }
+      const servings = Math.floor(ing.stock / r.amount);
+      if (servings < minServings) {
+        minServings = servings;
+        limitingName = ing.name;
+      }
+    }
+    if (minServings === Infinity) { minServings = 0; canMake = false; }
+    if (minServings < 1) canMake = false;
+
     const profit = roundTo(product.sellingPrice - totalCost, 2);
     const profitRate = totalCost > 0 ? roundTo((profit / product.sellingPrice) * 100, 0) : 0;
 

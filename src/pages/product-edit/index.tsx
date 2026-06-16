@@ -23,11 +23,11 @@ const ProductEditPage: React.FC = () => {
   const productId = router.params.id as string | undefined;
 
   const ingredients = useAppStore((s) => s.ingredients);
-  const getProductById = useAppStore((s) => s.getProductById);
+  const products = useAppStore((s) => s.products);
   const addProduct = useAppStore((s) => s.addProduct);
   const updateProduct = useAppStore((s) => s.updateProduct);
 
-  const existingProduct = useMemo(() => (productId ? getProductById(productId) : undefined), [productId, getProductById]);
+  const existingProduct = useMemo(() => (productId ? products.find((p) => p.id === productId) : undefined), [productId, products]);
   const isEdit = !!existingProduct;
 
   const [name, setName] = useState(existingProduct?.name || '');

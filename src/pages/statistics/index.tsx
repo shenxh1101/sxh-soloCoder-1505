@@ -16,16 +16,52 @@ const StatisticsPage: React.FC = () => {
   const ingredients = useAppStore((s) => s.ingredients);
   const saleRecords = useAppStore((s) => s.saleRecords);
   const products = useAppStore((s) => s.products);
-  const getProductRank = useAppStore((s) => s.getProductRank);
-  const getTodayStats = useAppStore((s) => s.getTodayStats);
-  const getCategoryStats = useAppStore((s) => s.getCategoryStats);
   const addProduct = useAppStore((s) => s.addProduct);
   const resetToDefault = useAppStore((s) => s.resetToDefault);
 
-  const todayStats = useMemo(() => getTodayStats(), [getTodayStats, saleRecords]);
-  const categoryStats = useMemo(() => getCategoryStats(), [getCategoryStats, saleRecords]);
+  const todayStats = useMemo(() => {
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const todayRecords = saleRecords.filter((r) => r.createdAt >= todayStart);
+    let totalRevenue = 0, totalCost = 0, totalCups = 0;
+    todayRecords.forEach((r) => { totalRevenue += r.totalRevenue; totalCost += r.totalCost; totalCups += r.quantity; });
+    return {
+      totalRevenue: roundTo(totalRevenue, 2), totalCost: roundTo(totalCost, 2),
+      totalProfit: roundTo(totalRevenue - totalCost, 2), orderCount: todayRecords.length, totalCups,
+    };
+  }, [saleRecords]);
+
+  const categoryStats = useMemo(() => {
+    const map = new Map<ProductCategory, { quantity: number; totalRevenue: number }>();
+    saleRecords.forEach((r) => {
+      const product = products.find((p) => p.id === r.productId);
+      if (!product) return;
+      const existing = map.get(product.category);
+      if (existing) { existing.quantity += r.quantity; existing.totalRevenue += r.totalRevenue; }
+      else { map.set(product.category, { quantity: r.quantity, totalRevenue: r.totalRevenue }); }
+    });
+    return Array.from(map.entries()).map(([category, data]) => ({ category, quantity: data.quantity, totalRevenue: roundTo(data.totalRevenue, 2) }));
+  }, [saleRecords, products]);
+
   const [sortBy, setSortBy] = useState<'quantity' | 'profit'>('quantity');
-  const rankList = useMemo(() => getProductRank(sortBy).slice(0, 8), [getProductRank, sortBy, saleRecords]);
+  const rankList = useMemo(() => {
+    const map = new Map<string, { productName: string; category: ProductCategory; quantity: number; totalRevenue: number; totalProfit: number }>();
+    saleRecords.forEach((r) => {
+      const product = products.find((p) => p.id === r.productId);
+      if (!product) return;
+      const existing = map.get(r.productId);
+      if (existing) { existing.quantity += r.quantity; existing.totalRevenue += r.totalRevenue; existing.totalProfit += r.totalProfit; }
+      else { map.set(r.productId, { productName: r.productName, category: product.category, quantity: r.quantity, totalRevenue: r.totalRevenue, totalProfit: r.totalProfit }); }
+    });
+    const list = Array.from(map.entries()).map(([productId, data]) => ({
+      productId, productName: data.productName, category: data.category, quantity: data.quantity,
+      totalRevenue: roundTo(data.totalRevenue, 2), totalProfit: roundTo(data.totalProfit, 2),
+      unitProfit: data.quantity > 0 ? roundTo(data.totalProfit / data.quantity, 2) : 0,
+    }));
+    if (sortBy === 'quantity') list.sort((a, b) => b.quantity - a.quantity);
+    else list.sort((a, b) => b.totalProfit - a.totalProfit);
+    return list.slice(0, 8);
+  }, [sortBy, saleRecords, products]);
 
   const [dailyDate, setDailyDate] = useState<string>(() => {
     const now = new Date();
@@ -84,6 +120,32 @@ const StatisticsPage: React.FC = () => {
       })
       .sort((a, b) => a.stock - b.stock);
 
+    const lowProfitProducts = products
+      .map((p) => {
+        let cost = 0;
+        p.recipe.forEach((r) => {
+          const ing = ingredients.find((i) => i.id === r.ingredientId);
+          if (ing) cost += ing.pricePerUnit * r.amount;
+        });
+        const profitRate = p.sellingPrice > 0 ? roundTo(((p.sellingPrice - cost) / p.sellingPrice) * 100, 0) : 0;
+        return { id: p.id, name: p.name, sellingPrice: p.sellingPrice, cost: roundTo(cost, 2), profit: roundTo(p.sellingPrice - cost, 2), profitRate };
+      })
+      .filter((p) => p.profitRate < 40 && p.profitRate >= 0)
+      .sort((a, b) => a.profitRate - b.profitRate);
+
+    const inefficientProducts = products
+      .map((p) => {
+        const daySold = productMap.get(p.id)?.qty || 0;
+        let totalIngCost = 0;
+        p.recipe.forEach((r) => {
+          const ing = ingredients.find((i) => i.id === r.ingredientId);
+          if (ing) totalIngCost += ing.pricePerUnit * r.amount;
+        });
+        return { id: p.id, name: p.name, daySold, totalIngCost: roundTo(totalIngCost, 2), wastedCost: daySold === 0 ? roundTo(totalIngCost, 2) : 0 };
+      })
+      .filter((p) => p.daySold === 0 && p.totalIngCost > 0)
+      .sort((a, b) => b.totalIngCost - a.totalIngCost);
+
     return {
       totalCups,
       totalRevenue: roundTo(totalRevenue, 2),
@@ -93,6 +155,8 @@ const StatisticsPage: React.FC = () => {
       bestSeller,
       topProfit,
       priorityRestock,
+      lowProfitProducts,
+      inefficientProducts,
     };
   }, [dailyDate, saleRecords, products, ingredients]);
 
@@ -381,6 +445,80 @@ const StatisticsPage: React.FC = () => {
                     <Text style={{ fontSize: 22, color: '#A09A94' }}>
                       {ing.impacted.length > 0 ? `影响${ing.impacted.length}款` : '暂无关联饮品'}
                     </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+      </View>
+
+      {/* 打烊建议 */}
+      <View className={styles.sectionBlock}>
+        <Text className={styles.sectionTitle}>🌙 打烊建议</Text>
+        {(dailySummary.priorityRestock.length === 0 && dailySummary.lowProfitProducts.length === 0 && dailySummary.inefficientProducts.length === 0) ? (
+          <View style={{ padding: '48rpx 0', textAlign: 'center', color: '#A09A94', fontSize: '24rpx' }}>
+            一切正常，今天经营状况不错 👍
+          </View>
+        ) : (
+          <View>
+            {dailySummary.priorityRestock.length > 0 && (
+              <View style={{ marginBottom: 24 }}>
+                <Text style={{ fontSize: 24, color: '#F53F3F', fontWeight: '600', marginBottom: 12, display: 'block' }}>
+                  🔴 低库存原料 ({dailySummary.priorityRestock.length}种)
+                </Text>
+                {dailySummary.priorityRestock.slice(0, 4).map((ing) => (
+                  <View key={ing.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '16rpx 20rpx', background: 'rgba(245,63,63,0.04)', borderRadius: 12, marginBottom: 8,
+                  }}>
+                    <View>
+                      <Text style={{ fontSize: 26, fontWeight: '500', color: '#333' }}>{ing.name}</Text>
+                      <Text style={{ fontSize: 22, color: '#F53F3F', marginLeft: 8 }}>剩{ing.stock}{ing.unit}</Text>
+                    </View>
+                    <Text style={{ fontSize: 22, color: '#A09A94' }}>
+                      {ing.impacted.length > 0 ? `影响${ing.impacted.length}款饮品` : '暂无关联'}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {dailySummary.lowProfitProducts.length > 0 && (
+              <View style={{ marginBottom: 24 }}>
+                <Text style={{ fontSize: 24, color: '#FF9800', fontWeight: '600', marginBottom: 12, display: 'block' }}>
+                  🟡 利润偏低饮品 ({dailySummary.lowProfitProducts.length}款)
+                </Text>
+                {dailySummary.lowProfitProducts.slice(0, 3).map((p) => (
+                  <View key={p.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '16rpx 20rpx', background: 'rgba(255,152,0,0.04)', borderRadius: 12, marginBottom: 8,
+                  }}>
+                    <Text style={{ fontSize: 26, fontWeight: '500', color: '#333' }}>{p.name}</Text>
+                    <View style={{ textAlign: 'right' }}>
+                      <Text style={{ fontSize: 22, color: '#FF9800' }}>毛利率 {p.profitRate}%</Text>
+                      <Text style={{ fontSize: 20, color: '#A09A94', marginLeft: 8 }}>成本¥{p.cost}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {dailySummary.inefficientProducts.length > 0 && (
+              <View>
+                <Text style={{ fontSize: 24, color: '#9C27B0', fontWeight: '600', marginBottom: 12, display: 'block' }}>
+                  🟣 零销量占用库存 ({dailySummary.inefficientProducts.length}款)
+                </Text>
+                {dailySummary.inefficientProducts.slice(0, 3).map((p) => (
+                  <View key={p.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '16rpx 20rpx', background: 'rgba(156,39,176,0.04)', borderRadius: 12, marginBottom: 8,
+                  }}>
+                    <Text style={{ fontSize: 26, fontWeight: '500', color: '#333' }}>{p.name}</Text>
+                    <View style={{ textAlign: 'right' }}>
+                      <Text style={{ fontSize: 22, color: '#9C27B0' }}>今日0杯</Text>
+                      <Text style={{ fontSize: 20, color: '#A09A94', marginLeft: 8 }}>单杯成本¥{p.totalIngCost}</Text>
+                    </View>
                   </View>
                 ))}
               </View>
