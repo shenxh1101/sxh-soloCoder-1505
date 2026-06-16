@@ -64,7 +64,7 @@ export interface RestockRecord {
 }
 
 // 库存流水
-export type StockLogType = 'restock' | 'sale_deduct' | 'manual_edit' | 'adjust';
+export type StockLogType = 'restock' | 'sale_deduct' | 'manual_edit' | 'adjust' | 'init';
 
 export interface StockLog {
   id: string;
@@ -79,7 +79,20 @@ export interface StockLog {
   createdAt: number;
 }
 
-// 产品成本详情
+// 销售记录
+export interface SaleRecord {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitCost: number;
+  sellingPrice: number;
+  totalCost: number;
+  totalRevenue: number;
+  totalProfit: number;
+  createdAt: number;
+  type?: 'sale' | 'init';
+}
 export interface ProductCostDetail {
   ingredientId: string;
   ingredientName: string;

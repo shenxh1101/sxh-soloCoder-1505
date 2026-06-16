@@ -283,6 +283,7 @@ const createStore = (set, get) => ({
       totalRevenue,
       totalProfit,
       createdAt: now,
+      type: 'sale',
     };
 
     const newIngredients = state.ingredients.map((ing) => {
@@ -409,6 +410,7 @@ const createStore = (set, get) => ({
     >();
 
     saleRecords.forEach((r) => {
+      if (r.type === 'init') return;
       const product = products.find((p) => p.id === r.productId);
       if (!product) return;
       const existing = map.get(r.productId);
@@ -454,6 +456,7 @@ const createStore = (set, get) => ({
     >();
 
     saleRecords.forEach((r) => {
+      if (r.type === 'init') return;
       const product = products.find((p) => p.id === r.productId);
       if (!product) return;
       const existing = map.get(product.category);
@@ -481,12 +484,38 @@ const createStore = (set, get) => ({
   },
 
   resetToDefault: () => {
+    const now = Date.now();
+    const initSaleRecord: SaleRecord = {
+      id: generateId(),
+      productId: 'system_init',
+      productName: '🔄 系统初始化',
+      quantity: 0,
+      unitCost: 0,
+      sellingPrice: 0,
+      totalCost: 0,
+      totalRevenue: 0,
+      totalProfit: 0,
+      createdAt: now,
+      type: 'init',
+    };
+    const initStockLog: StockLog = {
+      id: generateId(),
+      ingredientId: 'system_init',
+      ingredientName: '🔄 系统初始化',
+      type: 'init',
+      changeAmount: 0,
+      stockBefore: 0,
+      stockAfter: 0,
+      unit: 'g',
+      source: '已恢复为默认演示数据',
+      createdAt: now,
+    };
     set({
       ingredients: [...mockIngredients],
       products: [...mockProducts],
-      saleRecords: [...mockSaleRecords],
+      saleRecords: [initSaleRecord, ...mockSaleRecords],
       restockRecords: [...mockRestockRecords],
-      stockLogs: [],
+      stockLogs: [initStockLog],
     });
   },
 });
@@ -497,13 +526,16 @@ export const useAppStore = create<AppState>()(
     {
       name: STORAGE_KEY,
       storage: taroStorage,
-      version: 2,
+      version: 3,
       migrate: (persistedState: any, version: number) => {
         if (version < 2) {
           return {
             ...(persistedState as object),
             stockLogs: [],
           };
+        }
+        if (version < 3) {
+          return undefined;
         }
         return persistedState;
       },

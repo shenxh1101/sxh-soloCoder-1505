@@ -46,6 +46,51 @@
       transform: scale(0.96);
     }
   }
+
+  .copyBtn {
+    @include button-reset;
+    height: $button-height-sm;
+    padding: 0 $spacing-md;
+    background: rgba(76, 175, 80, 0.12);
+    color: #4CAF50;
+    border-radius: $radius-button;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    transition: all $transition-base;
+
+    &:active {
+      opacity: 0.9;
+      transform: scale(0.96);
+    }
+  }
+}
+
+.tabBar {
+  display: flex;
+  margin: $spacing-sm $page-padding $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  padding: 6rpx;
+  box-shadow: $shadow-card;
+
+  .tabItem {
+    flex: 1;
+    height: 64rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    border-radius: $radius-button;
+    transition: all $transition-base;
+  }
+
+  .tabActive {
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+    font-weight: $font-weight-semibold;
+    box-shadow: 0 4rpx 12rpx rgba(255, 138, 80, 0.25);
+  }
 }
 
 .summaryCards {
@@ -382,5 +427,114 @@
   .emptyText {
     color: $color-text-tertiary;
     font-size: $font-size-sm;
+  }
+}
+
+.restockSummary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+
+  .restockSumItem {
+    background: $color-bg-card;
+    border-radius: $radius-md;
+    padding: $spacing-md;
+    text-align: center;
+    box-shadow: $shadow-card;
+
+    .rsLabel {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+      display: block;
+      margin-bottom: 6rpx;
+    }
+
+    .rsValue {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-bold;
+      color: $color-text-primary;
+    }
+  }
+}
+
+.restockCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+
+  .rcTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-md;
+  }
+
+  .rcIcon {
+    width: 72rpx;
+    height: 72rpx;
+    border-radius: $radius-round;
+    background: $color-primary-bg;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36rpx;
+  }
+
+  .rcName {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    display: block;
+  }
+
+  .rcSub {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    display: block;
+    margin-top: 4rpx;
+  }
+
+  .rcBottom {
+    display: flex;
+    padding: $spacing-sm 0;
+    border-top: 1rpx dashed $color-divider;
+    border-bottom: 1rpx dashed $color-divider;
+    margin-bottom: $spacing-sm;
+
+    .rcLabel {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+      display: block;
+      margin-bottom: 4rpx;
+    }
+
+    .rcValue {
+      font-size: $font-size-sm;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+      display: block;
+    }
+  }
+
+  .rcBtnRow {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .rcBtn {
+    padding: $spacing-xs $spacing-md;
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: #fff;
+    border-radius: $radius-button;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+
+    &:active {
+      opacity: 0.9;
+      transform: scale(0.96);
+    }
   }
 }

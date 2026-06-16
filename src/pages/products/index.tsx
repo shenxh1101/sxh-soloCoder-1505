@@ -30,7 +30,7 @@ const ProductsPage: React.FC = () => {
     return groups;
   }, [products]);
 
-  const getProductCost = (product: Product) => {
+  const calculateProductCost = (product: Product) => {
     let total = 0;
     product.recipe.forEach((r) => {
       const ing = ingredients.find((i) => i.id === r.ingredientId);
@@ -86,8 +86,9 @@ const ProductsPage: React.FC = () => {
                 </View>
 
                 {list.map((product) => {
-                  const { totalCost } = getProductCost(product.id);
+                  const { totalCost } = calculateProductCost(product);
                   const profit = roundTo(product.sellingPrice - totalCost, 2);
+                  const profitRate = product.sellingPrice > 0 ? Math.round((profit / product.sellingPrice) * 100) : 0;
                   const recipeNames = product.recipe
                     .slice(0, 5)
                     .map((r) => getIngredientName(r.ingredientId));
@@ -143,6 +144,12 @@ const ProductsPage: React.FC = () => {
                             <Text className={styles.pLabel}>毛利</Text>
                             <Text className={`${styles.pValue} ${styles.profit}`}>
                               {formatPrice(profit)}
+                            </Text>
+                          </View>
+                          <View className={styles.pPriceItem}>
+                            <Text className={styles.pLabel}>毛利率</Text>
+                            <Text className={styles.pValue} style={{ fontWeight: '500', color: profitRate >= 50 ? '#4CAF50' : profitRate >= 40 ? '#FF9800' : '#F53F3F' }}>
+                              {profitRate}%
                             </Text>
                           </View>
                         </View>

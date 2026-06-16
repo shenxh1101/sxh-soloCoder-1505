@@ -28,6 +28,7 @@ const ProductDetailPage: React.FC = () => {
 
   const products = useAppStore((s) => s.products);
   const ingredients = useAppStore((s) => s.ingredients);
+  const saleRecords = useAppStore((s) => s.saleRecords);
   const makeSale = useAppStore((s) => s.makeSale);
 
   const product = useMemo(() => products.find((p) => p.id === productId), [products, productId]);
@@ -75,6 +76,31 @@ const ProductDetailPage: React.FC = () => {
   const profit = product ? roundTo(product.sellingPrice - costInfo.totalCost, 2) : 0;
   const profitRate = product && product.sellingPrice > 0 ? roundTo((profit / product.sellingPrice) * 100, 0) : 0;
   const costRate = costInfo.totalCost > 0 && product ? roundTo((costInfo.totalCost / product.sellingPrice) * 100, 0) : 0;
+
+  const trendData = useMemo(() => {
+    if (!product) return { days: [], totalCups: 0, totalRevenue: 0, totalProfit: 0, maxCups: 0 };
+    const days: Array<{ date: string; label: string; cups: number; revenue: number; profit: number }> = [];
+    let totalCups = 0, totalRevenue = 0, totalProfit = 0, maxCups = 0;
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+      const dayEnd = dayStart + 86400000;
+      const dayRecords = saleRecords.filter((r) => r.productId === product.id && r.createdAt >= dayStart && r.createdAt < dayEnd);
+      let cups = 0, revenue = 0, profitDay = 0;
+      dayRecords.forEach((r) => { cups += r.quantity; revenue += r.totalRevenue; profitDay += r.totalProfit; });
+      totalCups += cups; totalRevenue += revenue; totalProfit += profitDay;
+      if (cups > maxCups) maxCups = cups;
+      days.push({
+        date: `${d.getMonth() + 1}/${d.getDate()}`,
+        label: i === 0 ? '今天' : i === 1 ? '昨天' : `${d.getMonth() + 1}/${d.getDate()}`,
+        cups,
+        revenue: roundTo(revenue, 2),
+        profit: roundTo(profitDay, 2),
+      });
+    }
+    return { days, totalCups, totalRevenue: roundTo(totalRevenue, 2), totalProfit: roundTo(totalProfit, 2), maxCups };
+  }, [product, saleRecords]);
 
   if (!product) {
     return (
@@ -218,6 +244,41 @@ const ProductDetailPage: React.FC = () => {
               <Text className={styles.sLabel}>单杯毛利</Text>
               <Text className={`${styles.sBig} ${styles.profit}`}>{formatPrice(profit)}</Text>
             </View>
+          </View>
+        </View>
+
+        {/* 近7天趋势 */}
+        <View className={styles.sectionBlock}>
+          <View className={styles.sectionTitle}>
+            <Text className={styles.titleText}>📊 近7天趋势</Text>
+            <View style={{ display: 'flex', gap: '16rpx', fontSize: 22, color: '#A09A94' }}>
+              <Text>共 {trendData.totalCups} 杯</Text>
+              <Text>营收 ¥{trendData.totalRevenue}</Text>
+              <Text>毛利 ¥{trendData.totalProfit}</Text>
+            </View>
+          </View>
+          <View className={styles.trendChart}>
+            {trendData.days.map((d, idx) => {
+              const heightPct = trendData.maxCups > 0 ? Math.max(10, (d.cups / trendData.maxCups) * 100) : 0;
+              const isToday = idx === trendData.days.length - 1;
+              return (
+                <View key={idx} className={styles.trendBarWrap}>
+                  <Text className={styles.trendValue}>{d.cups}</Text>
+                  <View className={styles.trendBarBg}>
+                    <View
+                      className={classnames(styles.trendBar, isToday && styles.trendBarToday)}
+                      style={{ height: `${heightPct}%` }}
+                    />
+                  </View>
+                  <Text className={classnames(styles.trendLabel, isToday && styles.trendLabelToday)}>{d.label}</Text>
+                </View>
+              );
+            })}
+          </View>
+          <View className={styles.trendLegend}>
+            <Text style={{ fontSize: 22, color: '#A09A94' }}>
+              提示：点击「销售记录」可查看详细订单
+            </Text>
           </View>
         </View>
       </ScrollView>

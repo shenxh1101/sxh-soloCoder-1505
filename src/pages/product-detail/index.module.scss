@@ -282,3 +282,69 @@
 .pageContent {
   padding-bottom: 160rpx;
 }
+
+.trendChart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 260rpx;
+  padding: $spacing-md 0;
+  gap: 8rpx;
+}
+
+.trendBarWrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.trendValue {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+  height: 32rpx;
+  line-height: 32rpx;
+}
+
+.trendBarBg {
+  flex: 1;
+  width: 40rpx;
+  background: $color-bg-page;
+  border-radius: 8rpx 8rpx 0 0;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  margin: $spacing-xs 0;
+}
+
+.trendBar {
+  width: 100%;
+  background: linear-gradient(180deg, #FFB088 0%, #FF8A50 100%);
+  border-radius: 8rpx 8rpx 0 0;
+  transition: height $transition-base;
+
+  &.trendBarToday {
+    background: linear-gradient(180deg, #FF8A50 0%, #FF6B35 100%);
+    box-shadow: 0 2rpx 8rpx rgba(255, 138, 80, 0.4);
+  }
+}
+
+.trendLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  height: 32rpx;
+  line-height: 32rpx;
+
+  &.trendLabelToday {
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+.trendLegend {
+  text-align: center;
+  padding-top: $spacing-sm;
+  border-top: 1rpx dashed $color-divider;
+}

@@ -271,3 +271,13 @@
     line-height: 1.6;
   }
 }
+
+.initCard {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(156, 39, 176, 0.06) 0%, rgba(255, 138, 80, 0.06) 100%);
+  border: 1rpx dashed rgba(156, 39, 176, 0.3);
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  margin: 0 $page-padding $spacing-sm;
+}

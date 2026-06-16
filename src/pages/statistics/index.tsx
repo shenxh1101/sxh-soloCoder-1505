@@ -137,14 +137,31 @@ const StatisticsPage: React.FC = () => {
       .map((p) => {
         const daySold = productMap.get(p.id)?.qty || 0;
         let totalIngCost = 0;
+        let totalIngUnitCost = 0;
+        const keyIngredients: Array<{ name: string; cost: number }> = [];
         p.recipe.forEach((r) => {
           const ing = ingredients.find((i) => i.id === r.ingredientId);
-          if (ing) totalIngCost += ing.pricePerUnit * r.amount;
+          if (ing) {
+            const cost = ing.pricePerUnit * r.amount;
+            totalIngCost += cost;
+            totalIngUnitCost += cost;
+            keyIngredients.push({ name: ing.name, cost: roundTo(cost, 2) });
+          }
         });
-        return { id: p.id, name: p.name, daySold, totalIngCost: roundTo(totalIngCost, 2), wastedCost: daySold === 0 ? roundTo(totalIngCost, 2) : 0 };
+        keyIngredients.sort((a, b) => b.cost - a.cost);
+        const topIngredients = keyIngredients.slice(0, 3).map((i) => i.name);
+        const inefficiencyScore = (totalIngCost * 3) - (daySold * 2);
+        return {
+          id: p.id,
+          name: p.name,
+          daySold,
+          totalIngCost: roundTo(totalIngCost, 2),
+          topIngredients,
+          inefficiencyScore: roundTo(inefficiencyScore, 1),
+        };
       })
-      .filter((p) => p.daySold === 0 && p.totalIngCost > 0)
-      .sort((a, b) => b.totalIngCost - a.totalIngCost);
+      .filter((p) => p.daySold <= 3 && p.totalIngCost >= 3)
+      .sort((a, b) => b.inefficiencyScore - a.inefficiencyScore);
 
     return {
       totalCups,
@@ -507,17 +524,24 @@ const StatisticsPage: React.FC = () => {
             {dailySummary.inefficientProducts.length > 0 && (
               <View>
                 <Text style={{ fontSize: 24, color: '#9C27B0', fontWeight: '600', marginBottom: 12, display: 'block' }}>
-                  🟣 零销量占用库存 ({dailySummary.inefficientProducts.length}款)
+                  🟣 低效销售饮品 ({dailySummary.inefficientProducts.length}款)
                 </Text>
                 {dailySummary.inefficientProducts.slice(0, 3).map((p) => (
                   <View key={p.id} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '16rpx 20rpx', background: 'rgba(156,39,176,0.04)', borderRadius: 12, marginBottom: 8,
                   }}>
-                    <Text style={{ fontSize: 26, fontWeight: '500', color: '#333' }}>{p.name}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 26, fontWeight: '500', color: '#333', display: 'block' }}>{p.name}</Text>
+                      {p.topIngredients.length > 0 && (
+                        <Text style={{ fontSize: 20, color: '#A09A94', marginTop: 4, display: 'block' }}>
+                          关键原料: {p.topIngredients.join('、')}
+                        </Text>
+                      )}
+                    </View>
                     <View style={{ textAlign: 'right' }}>
-                      <Text style={{ fontSize: 22, color: '#9C27B0' }}>今日0杯</Text>
-                      <Text style={{ fontSize: 20, color: '#A09A94', marginLeft: 8 }}>单杯成本¥{p.totalIngCost}</Text>
+                      <Text style={{ fontSize: 22, color: '#9C27B0', display: 'block' }}>今日{p.daySold}杯</Text>
+                      <Text style={{ fontSize: 20, color: '#A09A94', marginTop: 4, display: 'block' }}>单杯成本¥{p.totalIngCost}</Text>
                     </View>
                   </View>
                 ))}

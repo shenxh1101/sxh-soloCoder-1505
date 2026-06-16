@@ -51,20 +51,23 @@ const SaleRecordsPage: React.FC = () => {
   }, [saleRecords, startTs, endTs, filterProductId, filterCategory, products]);
 
   const summary = useMemo(() => {
-    let totalCups = 0, totalRevenue = 0, totalCost = 0, totalProfit = 0;
+    let totalCups = 0, totalRevenue = 0, totalCost = 0, totalProfit = 0, orderCount = 0;
     filteredRecords.forEach((r) => {
+      if (r.type === 'init') return;
       totalCups += r.quantity;
       totalRevenue += r.totalRevenue;
       totalCost += r.totalCost;
       totalProfit += r.totalProfit;
+      orderCount++;
     });
     const avgPerCup = totalCups > 0 ? roundTo(totalRevenue / totalCups, 2) : 0;
-    return { totalCups, totalRevenue: roundTo(totalRevenue, 2), totalCost: roundTo(totalCost, 2), totalProfit: roundTo(totalProfit, 2), avgPerCup, orderCount: filteredRecords.length };
+    return { totalCups, totalRevenue: roundTo(totalRevenue, 2), totalCost: roundTo(totalCost, 2), totalProfit: roundTo(totalProfit, 2), avgPerCup, orderCount };
   }, [filteredRecords]);
 
   const bestSeller = useMemo(() => {
     const map = new Map<string, { name: string; qty: number }>();
     filteredRecords.forEach((r) => {
+      if (r.type === 'init') return;
       const e = map.get(r.productId);
       if (e) e.qty += r.quantity;
       else map.set(r.productId, { name: r.productName, qty: r.quantity });
@@ -85,12 +88,14 @@ const SaleRecordsPage: React.FC = () => {
     {
       const map = new Map<string, { name: string; qty: number }>();
       prevRecords.forEach((r) => {
-        prevCups += r.quantity;
-        prevRevenue += r.totalRevenue;
-        prevProfit += r.totalProfit;
-        const e = map.get(r.productId);
-        if (e) e.qty += r.quantity;
-        else map.set(r.productId, { name: r.productName, qty: r.quantity });
+        if (r.type !== 'init') {
+          prevCups += r.quantity;
+          prevRevenue += r.totalRevenue;
+          prevProfit += r.totalProfit;
+          const e = map.get(r.productId);
+          if (e) e.qty += r.quantity;
+          else map.set(r.productId, { name: r.productName, qty: r.quantity });
+        }
       });
       const arr = Array.from(map.values());
       arr.sort((a, b) => b.qty - a.qty);
@@ -302,6 +307,19 @@ const SaleRecordsPage: React.FC = () => {
             <View className={styles.sectionTitle}>共 {summary.orderCount} 笔订单，{summary.totalCups} 杯</View>
 
             {filteredRecords.map((record) => {
+              if (record.type === 'init') {
+                return (
+                  <View key={record.id} className={styles.initCard}>
+                    <View style={{ fontSize: 28, marginRight: 12 }}>🔄</View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 26, fontWeight: '500', color: '#333', display: 'block' }}>{record.productName}</Text>
+                      <Text style={{ fontSize: 22, color: '#A09A94', marginTop: 4, display: 'block' }}>
+                        {formatDate(record.createdAt)} {formatTime(record.createdAt)} · 所有数据已重置为默认演示数据
+                      </Text>
+                    </View>
+                  </View>
+                );
+              }
               const cat = getCategory(record.productId);
               const catColor = cat ? categoryColors[cat] : null;
               const recordIsToday = new Date(record.createdAt).toDateString() === new Date().toDateString();

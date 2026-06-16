@@ -12,6 +12,7 @@ const typeLabelMap: Record<StockLogType, string> = {
   sale_deduct: '制作扣料',
   manual_edit: '手动修改',
   adjust: '库存调整',
+  init: '系统初始化',
 };
 
 const typeIconMap: Record<StockLogType, string> = {
@@ -19,6 +20,7 @@ const typeIconMap: Record<StockLogType, string> = {
   sale_deduct: '🥤',
   manual_edit: '✏️',
   adjust: '🔄',
+  init: '🔄',
 };
 
 type FilterType = 'all' | StockLogType;
@@ -64,11 +66,14 @@ const StockLogsPage: React.FC = () => {
   const daySummary = useMemo(() => {
     let restockTotal = 0;
     let deductTotal = 0;
+    let recordCount = 0;
     dayLogs.forEach((log) => {
+      if (log.type === 'init') return;
       if (log.changeAmount > 0) restockTotal += log.changeAmount;
       else deductTotal += Math.abs(log.changeAmount);
+      recordCount++;
     });
-    return { restockTotal: roundTo(restockTotal, 1), deductTotal: roundTo(deductTotal, 1), count: dayLogs.length };
+    return { restockTotal: roundTo(restockTotal, 1), deductTotal: roundTo(deductTotal, 1), count: recordCount };
   }, [dayLogs]);
 
   const handlePrevDay = () => {
@@ -192,8 +197,22 @@ const StockLogsPage: React.FC = () => {
 
             <View className={styles.sectionTitle}>变动明细</View>
 
-            {dayLogs.map((log) => (
-              <View key={log.id} className={styles.logCard}>
+            {dayLogs.map((log) => {
+              if (log.type === 'init') {
+                return (
+                  <View key={log.id} className={styles.initCard}>
+                    <View style={{ fontSize: 28, marginRight: 12 }}>🔄</View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 26, fontWeight: '500', color: '#333', display: 'block' }}>{log.ingredientName}</Text>
+                      <Text style={{ fontSize: 22, color: '#A09A94', marginTop: 4, display: 'block' }}>
+                        {formatTime(log.createdAt)} · {log.source}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              }
+              return (
+                <View key={log.id} className={styles.logCard}>
                 <View className={styles.logTop}>
                   <Text className={styles.logName}>
                     {typeIconMap[log.type]} {log.ingredientName}
@@ -221,7 +240,8 @@ const StockLogsPage: React.FC = () => {
                   </View>
                 </View>
               </View>
-            ))}
+              );
+            })}
           </View>
         )}
       </ScrollView>
