@@ -288,6 +288,59 @@
       transform: scale(0.96);
     }
   }
+
+  .impactRow {
+    margin-top: $spacing-md;
+    padding-top: $spacing-md;
+    border-top: 1rpx dashed $color-divider;
+
+    .impactLabel {
+      display: block;
+      font-size: $font-size-sm;
+      color: $color-stock-warning;
+      font-weight: $font-weight-medium;
+      margin-bottom: $spacing-sm;
+    }
+
+    .impactList {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12rpx 20rpx;
+    }
+
+    .impactItem {
+      display: flex;
+      align-items: center;
+      gap: 12rpx;
+      padding: 8rpx 16rpx;
+      background: rgba(245, 63, 63, 0.06);
+      border-radius: $radius-sm;
+    }
+
+    .impactName {
+      font-size: $font-size-xs;
+      color: $color-text-primary;
+      max-width: 180rpx;
+      @include text-ellipsis;
+    }
+
+    .impactCups {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+
+      .impactCupsNum {
+        color: $color-stock-warning;
+        font-weight: $font-weight-semibold;
+        font-size: $font-size-sm;
+      }
+    }
+
+    .impactMore {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+      padding: 8rpx 0;
+    }
+  }
 }
 
 .emptyWrapper {

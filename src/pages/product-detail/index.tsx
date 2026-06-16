@@ -25,15 +25,51 @@ const ProductDetailPage: React.FC = () => {
   const router = useRouter();
   const productId = router.params.id as string;
 
-  const getProductById = useAppStore((s) => s.getProductById);
-  const getProductCost = useAppStore((s) => s.getProductCost);
-  const canMakeProduct = useAppStore((s) => s.canMakeProduct);
+  const products = useAppStore((s) => s.products);
+  const ingredients = useAppStore((s) => s.ingredients);
   const makeSale = useAppStore((s) => s.makeSale);
-  const getIngredientById = useAppStore((s) => s.getIngredientById);
 
-  const product = useMemo(() => (productId ? getProductById(productId) : undefined), [productId, getProductById]);
-  const costInfo = useMemo(() => (product ? getProductCost(product.id) : { totalCost: 0, details: [] }), [product, getProductCost]);
-  const makeInfo = useMemo(() => (product ? canMakeProduct(product.id) : { canMake: false, minServings: 0, limitingName: '' }), [product, canMakeProduct]);
+  const product = useMemo(() => products.find((p) => p.id === productId), [products, productId]);
+  const costInfo = useMemo(() => {
+    if (!product) return { totalCost: 0, details: [] };
+    let total = 0;
+    const details = product.recipe
+      .map((r) => {
+        const ing = ingredients.find((i) => i.id === r.ingredientId);
+        if (!ing) return null;
+        const itemCost = Number((ing.pricePerUnit * r.amount).toFixed(4));
+        total += itemCost;
+        return {
+          ingredientId: ing.id,
+          ingredientName: ing.name,
+          amount: r.amount,
+          unit: ing.unit,
+          unitPrice: ing.pricePerUnit,
+          itemCost,
+        };
+      })
+      .filter(Boolean);
+    return { totalCost: Number(total.toFixed(4)), details };
+  }, [product, ingredients]);
+  const makeInfo = useMemo(() => {
+    if (!product) return { canMake: false, minServings: 0, limitingName: '' };
+    let minServings = Infinity;
+    let limitingName: string | undefined;
+    for (const r of product.recipe) {
+      const ing = ingredients.find((i) => i.id === r.ingredientId);
+      if (!ing || ing.stock <= 0) return { canMake: false, minServings: 0, limitingName: ing?.name || '未知原料' };
+      const canMake = Math.floor(ing.stock / r.amount);
+      if (canMake < minServings) {
+        minServings = canMake;
+        limitingName = ing.name;
+      }
+    }
+    return {
+      canMake: minServings >= 1,
+      minServings: minServings === Infinity ? 0 : minServings,
+      limitingName,
+    };
+  }, [product, ingredients]);
 
   const profit = product ? roundTo(product.sellingPrice - costInfo.totalCost, 2) : 0;
   const profitRate = product && product.sellingPrice > 0 ? roundTo((profit / product.sellingPrice) * 100, 0) : 0;
@@ -113,7 +149,7 @@ const ProductDetailPage: React.FC = () => {
               </View>
             ) : (
               costInfo.details.map((d) => {
-                const ing = getIngredientById(d.ingredientId);
+                const ing = ingredients.find((i) => i.id === d.ingredientId);
                 const cat = ing?.category || '其他';
                 const iconStyle = categoryColorMap[cat] || categoryColorMap['其他'];
                 const stockStatus = ing ? getStockStatus(ing.stock, ing.warningThreshold) : 'safe';

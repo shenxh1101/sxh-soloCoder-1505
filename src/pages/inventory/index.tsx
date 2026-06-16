@@ -35,6 +35,7 @@ const filterOptions: Array<{ key: FilterType; label: string }> = [
 const InventoryPage: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const ingredients = useAppStore((state) => state.ingredients);
+  const products = useAppStore((state) => state.products);
   const restockIngredient = useAppStore((state) => state.restockIngredient);
 
   const summary = useMemo(() => {
@@ -191,6 +192,18 @@ const InventoryPage: React.FC = () => {
               </View>
               {list.map((ingredient) => {
                 const status = getStockStatus(ingredient.stock, ingredient.warningThreshold);
+                let impactedDrinks: Array<{ productId: string; productName: string; canMake: number }> = [];
+                if (status !== 'safe') {
+                  impactedDrinks = products
+                    .filter((p) => p.recipe.some((r) => r.ingredientId === ingredient.id))
+                    .map((p) => {
+                      const r = p.recipe.find((rr) => rr.ingredientId === ingredient.id)!;
+                      const canMake = Math.floor(ingredient.stock / r.amount);
+                      return { productId: p.id, productName: p.name, canMake };
+                    })
+                    .sort((a, b) => a.canMake - b.canMake);
+                }
+
                 return (
                   <View
                     key={ingredient.id}
@@ -231,6 +244,26 @@ const InventoryPage: React.FC = () => {
                         </View>
                       </View>
                     </View>
+                    {impactedDrinks.length > 0 && (
+                      <View className={styles.impactRow}>
+                        <Text className={styles.impactLabel}>
+                          🥤 影响 {impactedDrinks.length} 款饮品，最少可做 {impactedDrinks[0]?.canMake || 0} 杯
+                        </Text>
+                        <View className={styles.impactList}>
+                          {impactedDrinks.slice(0, 4).map((d) => (
+                            <View key={d.productId} className={styles.impactItem}>
+                              <Text className={styles.impactName}>{d.productName}</Text>
+                              <Text className={styles.impactCups}>
+                                剩 <Text className={styles.impactCupsNum}>{d.canMake}</Text> 杯
+                              </Text>
+                            </View>
+                          ))}
+                          {impactedDrinks.length > 4 && (
+                            <Text className={styles.impactMore}>+{impactedDrinks.length - 4} 款</Text>
+                          )}
+                        </View>
+                      </View>
+                    )}
                   </View>
                 );
               })}

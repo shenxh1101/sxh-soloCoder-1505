@@ -19,6 +19,7 @@ const StatisticsPage: React.FC = () => {
   const getTodayStats = useAppStore((s) => s.getTodayStats);
   const getCategoryStats = useAppStore((s) => s.getCategoryStats);
   const addProduct = useAppStore((s) => s.addProduct);
+  const resetToDefault = useAppStore((s) => s.resetToDefault);
 
   const todayStats = useMemo(() => getTodayStats(), [getTodayStats, saleRecords]);
   const categoryStats = useMemo(() => getCategoryStats(), [getCategoryStats, saleRecords]);
@@ -73,6 +74,13 @@ const StatisticsPage: React.FC = () => {
   };
 
   const updateRecipeIngredient = (idx: number, ingId: string) => {
+    if (!ingId) return;
+    const isDuplicate = calcRecipe.some((r, i) => i !== idx && r.ingredientId === ingId);
+    if (isDuplicate) {
+      const ingName = ingredients.find((i) => i.id === ingId)?.name || '';
+      Taro.showToast({ title: `${ingName} 已在配方中`, icon: 'none' });
+      return;
+    }
     const arr = [...calcRecipe];
     arr[idx] = { ...arr[idx], ingredientId: ingId };
     setCalcRecipe(arr);
@@ -235,7 +243,15 @@ const StatisticsPage: React.FC = () => {
             {rankList.map((item, idx) => {
               const cc = categoryColors[item.category];
               return (
-                <View key={item.productId} className={styles.rankCard}>
+                <View
+                  key={item.productId}
+                  className={styles.rankCard}
+                  onClick={() => {
+                    Taro.navigateTo({
+                      url: `/pages/sale-records/index?productId=${item.productId}&productName=${encodeURIComponent(item.productName)}`,
+                    });
+                  }}
+                >
                   <View className={styles.rankHeader}>
                     <View className={styles.rankLeft}>
                       <View
@@ -418,6 +434,58 @@ const StatisticsPage: React.FC = () => {
               💡 小提示：建议零售价通常是成本的3~4倍（毛利率66~75%），竞争激烈区域可适当下调至2.5倍（毛利率60%）。
             </View>
           </View>
+        </View>
+      </View>
+
+      {/* 底部操作 */}
+      <View style={{ padding: '0 32rpx 40rpx' }}>
+        <View
+          style={{
+            height: 88,
+            borderRadius: 48,
+            background: 'linear-gradient(135deg, #FF8A50 0%, #FFB088 100%)',
+            color: '#fff',
+            fontSize: 28,
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4rpx 16rpx rgba(255, 138, 80, 0.3)',
+            marginBottom: 24,
+          }}
+          onClick={() => Taro.navigateTo({ url: '/pages/sale-records/index' })}
+        >
+          📋 查看全部销售记录
+        </View>
+        <View
+          style={{
+            height: 72,
+            borderRadius: 48,
+            background: '#F7F2ED',
+            color: '#A09A94',
+            fontSize: 24,
+            fontWeight: '500',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={() => {
+            Taro.showModal({
+              title: '恢复默认数据',
+              content: '确定要恢复为初始演示数据吗？所有操作记录将被清空。',
+              confirmText: '恢复默认',
+              cancelText: '取消',
+              confirmColor: '#F53F3F',
+              success: (res) => {
+                if (res.confirm) {
+                  resetToDefault();
+                  Taro.showToast({ title: '已恢复默认数据', icon: 'success' });
+                }
+              },
+            });
+          }}
+        >
+          🔄 恢复默认演示数据
         </View>
       </View>
     </ScrollView>

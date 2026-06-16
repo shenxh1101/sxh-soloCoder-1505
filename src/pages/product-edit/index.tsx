@@ -75,8 +75,16 @@ const ProductEditPage: React.FC = () => {
   };
 
   const updateRecipeIng = (idx: number, ingIdx: number) => {
+    const targetId = ingredients[ingIdx]?.id || '';
+    if (!targetId) return;
+    const isDuplicate = recipe.some((r, i) => i !== idx && r.ingredientId === targetId);
+    if (isDuplicate) {
+      const ingName = ingredients[ingIdx]?.name || '';
+      Taro.showToast({ title: `${ingName} 已在配方中`, icon: 'none' });
+      return;
+    }
     const arr = [...recipe];
-    arr[idx] = { ...arr[idx], ingredientId: ingredients[ingIdx]?.id || '' };
+    arr[idx] = { ...arr[idx], ingredientId: targetId };
     setRecipe(arr);
   };
 

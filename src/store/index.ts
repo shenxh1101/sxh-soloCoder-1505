@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import Taro from '@tarojs/taro';
 import type {
   Ingredient,
   Product,
@@ -19,6 +21,33 @@ import {
   calculateProductCost,
   roundTo,
 } from '@/utils';
+
+const STORAGE_KEY = 'cold_drink_shop_store';
+
+const taroStorage = {
+  getItem: (name: string): string | null => {
+    try {
+      const val = Taro.getStorageSync(name);
+      return val === '' || val === undefined || val === null ? null : String(val);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (name: string, value: string): void => {
+    try {
+      Taro.setStorageSync(name, value);
+    } catch {
+      // ignore
+    }
+  },
+  removeItem: (name: string): void => {
+    try {
+      Taro.removeStorageSync(name);
+    } catch {
+      // ignore
+    }
+  },
+};
 
 interface AppState {
   ingredients: Ingredient[];
@@ -64,9 +93,11 @@ interface AppState {
     totalRevenue: number;
   }>;
   getWarningIngredients: () => Ingredient[];
+
+  resetToDefault: () => void;
 }
 
-export const useAppStore = create<AppState>((set, get) => ({
+const createStore = (set, get) => ({
   ingredients: [...mockIngredients],
   products: [...mockProducts],
   saleRecords: [...mockSaleRecords],
@@ -367,4 +398,25 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { ingredients } = get();
     return ingredients.filter((i) => i.stock <= i.warningThreshold);
   },
-}));
+
+  resetToDefault: () => {
+    set({
+      ingredients: [...mockIngredients],
+      products: [...mockProducts],
+      saleRecords: [...mockSaleRecords],
+      restockRecords: [...mockRestockRecords],
+    });
+    console.log('[Store] resetToDefault');
+  },
+});
+
+export const useAppStore = create<AppState>()(
+  persist(
+    createStore,
+    {
+      name: STORAGE_KEY,
+      storage: taroStorage,
+      version: 1,
+    }
+  )
+);
