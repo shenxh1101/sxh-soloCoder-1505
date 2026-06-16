@@ -1,0 +1,229 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  min-height: 100vh;
+  background: $color-bg-page;
+}
+
+.filterBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx;
+  background: $color-bg-card;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.datePicker {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.dateNav {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: $color-bg-page;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: $color-text-secondary;
+  font-weight: 600;
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.dateText {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  min-width: 200rpx;
+  text-align: center;
+}
+
+.typeFilter {
+  display: flex;
+  gap: 12rpx;
+  padding: 0 32rpx 20rpx;
+  background: $color-bg-card;
+}
+
+.typeBtn {
+  padding: 8rpx 20rpx;
+  border-radius: 32rpx;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  background: $color-bg-page;
+  transition: all $transition-base;
+
+  &.active {
+    background: rgba(255, 138, 80, 0.12);
+    color: $color-primary;
+    font-weight: $font-weight-medium;
+  }
+}
+
+.summaryCard {
+  margin: 24rpx 32rpx;
+  background: linear-gradient(135deg, #4CAF50 0%, #81C784 100%);
+  border-radius: $radius-lg;
+  padding: 32rpx;
+  color: #fff;
+  display: flex;
+  justify-content: space-around;
+}
+
+.summaryItem {
+  text-align: center;
+
+  .sLabel {
+    display: block;
+    font-size: 22rpx;
+    opacity: 0.85;
+    margin-bottom: 8rpx;
+  }
+
+  .sValue {
+    font-size: 36rpx;
+    font-weight: bold;
+  }
+
+  .sUnit {
+    font-size: 22rpx;
+    opacity: 0.85;
+    margin-left: 4rpx;
+  }
+}
+
+.sectionTitle {
+  padding: 24rpx 32rpx 12rpx;
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.logCard {
+  margin: 0 32rpx 16rpx;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: 24rpx 32rpx;
+  box-shadow: $shadow-card;
+}
+
+.logTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.logName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.logTime {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.logTypeTag {
+  display: inline-block;
+  padding: 4rpx 16rpx;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  margin-bottom: 16rpx;
+
+  &.restock {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+  }
+
+  &.sale_deduct {
+    background: rgba(255, 138, 80, 0.1);
+    color: #FF8A50;
+  }
+
+  &.manual_edit {
+    background: rgba(33, 150, 243, 0.1);
+    color: #2196F3;
+  }
+
+  &.adjust {
+    background: rgba(156, 39, 176, 0.1);
+    color: #9C27B0;
+  }
+}
+
+.logSource {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: 16rpx;
+}
+
+.logBottom {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 16rpx;
+  border-top: 1rpx dashed $color-divider;
+}
+
+.logStat {
+  text-align: center;
+
+  .lsLabel {
+    display: block;
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    margin-bottom: 4rpx;
+  }
+
+  .lsValue {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+  }
+}
+
+.changePositive {
+  color: #4CAF50 !important;
+}
+
+.changeNegative {
+  color: #F53F3F !important;
+}
+
+.emptyWrapper {
+  padding: 120rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  .emptyIcon {
+    width: 200rpx;
+    height: 200rpx;
+    border-radius: $radius-round;
+    background: $color-bg-page;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 100rpx;
+    margin-bottom: $spacing-md;
+  }
+
+  .emptyText {
+    color: $color-text-tertiary;
+    font-size: $font-size-sm;
+    text-align: center;
+    line-height: 1.6;
+  }
+}

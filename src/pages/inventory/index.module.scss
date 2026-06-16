@@ -29,6 +29,23 @@
       transform: scale(0.96);
     }
   }
+
+  .logBtn {
+    @include button-reset;
+    height: $button-height-sm;
+    padding: 0 $spacing-md;
+    background: rgba(255, 138, 80, 0.1);
+    color: $color-primary;
+    border-radius: $radius-button;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    transition: all $transition-base;
+
+    &:active {
+      opacity: 0.9;
+      transform: scale(0.96);
+    }
+  }
 }
 
 .summaryCards {

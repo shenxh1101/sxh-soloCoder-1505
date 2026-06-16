@@ -3,7 +3,7 @@ import { View, Text, ScrollView, Input, Picker } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { useAppStore } from '@/store';
-import { categoryLabels, categoryColors, formatPrice, calculateSuggestedPrice, roundTo } from '@/utils';
+import { categoryLabels, categoryColors, formatPrice, calculateSuggestedPrice, roundTo, getStockStatus } from '@/utils';
 import type { Ingredient, RecipeItem, ProductCategory } from '@/types';
 import styles from './index.module.scss';
 
@@ -15,6 +15,7 @@ interface CalcRecipeItem extends RecipeItem {
 const StatisticsPage: React.FC = () => {
   const ingredients = useAppStore((s) => s.ingredients);
   const saleRecords = useAppStore((s) => s.saleRecords);
+  const products = useAppStore((s) => s.products);
   const getProductRank = useAppStore((s) => s.getProductRank);
   const getTodayStats = useAppStore((s) => s.getTodayStats);
   const getCategoryStats = useAppStore((s) => s.getCategoryStats);
@@ -25,6 +26,87 @@ const StatisticsPage: React.FC = () => {
   const categoryStats = useMemo(() => getCategoryStats(), [getCategoryStats, saleRecords]);
   const [sortBy, setSortBy] = useState<'quantity' | 'profit'>('quantity');
   const rankList = useMemo(() => getProductRank(sortBy).slice(0, 8), [getProductRank, sortBy, saleRecords]);
+
+  const [dailyDate, setDailyDate] = useState<string>(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  });
+
+  const dailySummary = useMemo(() => {
+    const [y, m, d] = dailyDate.split('-').map(Number);
+    const dayStart = new Date(y, m - 1, d).getTime();
+    const dayEnd = dayStart + 86400000;
+    const dayRecords = saleRecords.filter((r) => r.createdAt >= dayStart && r.createdAt < dayEnd);
+
+    let totalCups = 0;
+    let totalRevenue = 0;
+    let totalCost = 0;
+    let totalProfit = 0;
+    const productMap = new Map<string, { name: string; category: ProductCategory; qty: number; revenue: number; profit: number }>();
+
+    dayRecords.forEach((r) => {
+      totalCups += r.quantity;
+      totalRevenue += r.totalRevenue;
+      totalCost += r.totalCost;
+      totalProfit += r.totalProfit;
+      const existing = productMap.get(r.productId);
+      if (existing) {
+        existing.qty += r.quantity;
+        existing.revenue += r.totalRevenue;
+        existing.profit += r.totalProfit;
+      } else {
+        const prod = products.find((p) => p.id === r.productId);
+        productMap.set(r.productId, {
+          name: r.productName,
+          category: prod?.category || 'milk_tea',
+          qty: r.quantity,
+          revenue: r.totalRevenue,
+          profit: r.totalProfit,
+        });
+      }
+    });
+
+    const productList = Array.from(productMap.entries()).map(([id, data]) => ({ id, ...data }));
+    const bestSeller = [...productList].sort((a, b) => b.qty - a.qty)[0];
+    const topProfit = [...productList].sort((a, b) => b.profit - a.profit)[0];
+
+    const warningIngs = ingredients.filter((i) => i.stock <= i.warningThreshold);
+    const priorityRestock = warningIngs
+      .map((ing) => {
+        const impacted = products
+          .filter((p) => p.recipe.some((r) => r.ingredientId === ing.id))
+          .map((p) => {
+            const r = p.recipe.find((rr) => rr.ingredientId === ing.id)!;
+            return { name: p.name, canMake: Math.floor(ing.stock / r.amount) };
+          })
+          .sort((a, b) => a.canMake - b.canMake);
+        return { ...ing, impacted };
+      })
+      .sort((a, b) => a.stock - b.stock);
+
+    return {
+      totalCups,
+      totalRevenue: roundTo(totalRevenue, 2),
+      totalCost: roundTo(totalCost, 2),
+      totalProfit: roundTo(totalProfit, 2),
+      orderCount: dayRecords.length,
+      bestSeller,
+      topProfit,
+      priorityRestock,
+    };
+  }, [dailyDate, saleRecords, products, ingredients]);
+
+  const dateOptions = useMemo(() => {
+    const opts: string[] = [];
+    for (let i = 0; i < 14; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      opts.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+    }
+    return opts;
+  }, []);
+
+  const dailyDateIdx = dateOptions.indexOf(dailyDate);
 
   // 新品计算器状态
   const [newName, setNewName] = useState('');
@@ -182,6 +264,129 @@ const StatisticsPage: React.FC = () => {
             <Text className={styles.qValue}>¥{todayStats.totalProfit}</Text>
           </View>
         </View>
+      </View>
+
+      {/* 每日收银小结 */}
+      <View className={styles.sectionBlock}>
+        <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24rpx' }}>
+          <Text className={styles.sectionTitle} style={{ marginBottom: 0 }}>🏷️ 每日收银小结</Text>
+          <Picker
+            range={dateOptions}
+            value={dailyDateIdx >= 0 ? dailyDateIdx : 0}
+            onChange={(e) => setDailyDate(dateOptions[Number(e.detail.value)])}
+          >
+            <View style={{
+              padding: '6rpx 20rpx',
+              background: 'rgba(255,138,80,0.1)',
+              borderRadius: 32,
+              fontSize: 24,
+              color: '#FF8A50',
+              fontWeight: '500',
+            }}>
+              {dailyDate.split('-').slice(1).join('/')} ▾
+            </View>
+          </Picker>
+        </View>
+
+        {dailySummary.orderCount === 0 ? (
+          <View style={{ padding: '48rpx 0', textAlign: 'center', color: '#A09A94', fontSize: '24rpx' }}>
+            当天没有销售记录
+          </View>
+        ) : (
+          <View>
+            <View style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '16rpx',
+              marginBottom: '24rpx',
+            }}>
+              <View style={{ textAlign: 'center', padding: '16rpx', background: '#FFF9F5', borderRadius: 12 }}>
+                <Text style={{ display: 'block', fontSize: 22, color: '#A09A94', marginBottom: 4 }}>出杯</Text>
+                <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#FF8A50' }}>{dailySummary.totalCups}</Text>
+              </View>
+              <View style={{ textAlign: 'center', padding: '16rpx', background: '#FFF9F5', borderRadius: 12 }}>
+                <Text style={{ display: 'block', fontSize: 22, color: '#A09A94', marginBottom: 4 }}>营收</Text>
+                <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#333' }}>¥{dailySummary.totalRevenue}</Text>
+              </View>
+              <View style={{ textAlign: 'center', padding: '16rpx', background: '#FFF9F5', borderRadius: 12 }}>
+                <Text style={{ display: 'block', fontSize: 22, color: '#A09A94', marginBottom: 4 }}>成本</Text>
+                <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#FF6B6B' }}>¥{dailySummary.totalCost}</Text>
+              </View>
+              <View style={{ textAlign: 'center', padding: '16rpx', background: '#FFF9F5', borderRadius: 12 }}>
+                <Text style={{ display: 'block', fontSize: 22, color: '#A09A94', marginBottom: 4 }}>毛利</Text>
+                <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#4CAF50' }}>¥{dailySummary.totalProfit}</Text>
+              </View>
+            </View>
+
+            {dailySummary.bestSeller && (
+              <View style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '20rpx 24rpx',
+                background: '#FFF9F5',
+                borderRadius: 12,
+                marginBottom: 16,
+              }}>
+                <View>
+                  <Text style={{ fontSize: 22, color: '#A09A94' }}>🏆 今日热销</Text>
+                  <Text style={{ fontSize: 28, fontWeight: '600', color: '#333', marginLeft: 8 }}>{dailySummary.bestSeller.name}</Text>
+                </View>
+                <Text style={{ fontSize: 24, color: '#FF8A50', fontWeight: '500' }}>{dailySummary.bestSeller.qty}杯</Text>
+              </View>
+            )}
+
+            {dailySummary.topProfit && (
+              <View style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '20rpx 24rpx',
+                background: '#FFF9F5',
+                borderRadius: 12,
+                marginBottom: 16,
+              }}>
+                <View>
+                  <Text style={{ fontSize: 22, color: '#A09A94' }}>💰 利润最高</Text>
+                  <Text style={{ fontSize: 28, fontWeight: '600', color: '#333', marginLeft: 8 }}>{dailySummary.topProfit.name}</Text>
+                </View>
+                <Text style={{ fontSize: 24, color: '#4CAF50', fontWeight: '500' }}>¥{roundTo(dailySummary.topProfit.profit, 2)}</Text>
+              </View>
+            )}
+
+            {dailySummary.priorityRestock.length > 0 && (
+              <View style={{ marginTop: '16rpx' }}>
+                <Text style={{ fontSize: 22, color: '#F53F3F', fontWeight: '500', marginBottom: 12, display: 'block' }}>
+                  ⚠️ 优先补货 ({dailySummary.priorityRestock.length}种)
+                </Text>
+                {dailySummary.priorityRestock.slice(0, 3).map((ing) => (
+                  <View
+                    key={ing.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '16rpx 24rpx',
+                      background: 'rgba(245,63,63,0.04)',
+                      borderRadius: 12,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <View>
+                      <Text style={{ fontSize: 26, fontWeight: '500', color: '#333' }}>{ing.name}</Text>
+                      <Text style={{ fontSize: 22, color: '#F53F3F', marginLeft: 8 }}>
+                        剩{ing.stock}{ing.unit}
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 22, color: '#A09A94' }}>
+                      {ing.impacted.length > 0 ? `影响${ing.impacted.length}款` : '暂无关联饮品'}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
       </View>
 
       {/* 分类占比 */}

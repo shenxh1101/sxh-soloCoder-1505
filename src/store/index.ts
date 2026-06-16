@@ -6,6 +6,7 @@ import type {
   Product,
   SaleRecord,
   RestockRecord,
+  StockLog,
   ProductCategory,
   RecipeItem,
   ProductCostDetail,
@@ -54,6 +55,7 @@ interface AppState {
   products: Product[];
   saleRecords: SaleRecord[];
   restockRecords: RestockRecord[];
+  stockLogs: StockLog[];
 
   addIngredient: (data: Omit<Ingredient, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateIngredient: (id: string, data: Partial<Ingredient>) => void;
@@ -72,6 +74,13 @@ interface AppState {
   canMakeProduct: (productId: string) => { canMake: boolean; minServings: number; limitingName?: string };
 
   getTodayStats: () => {
+    totalRevenue: number;
+    totalCost: number;
+    totalProfit: number;
+    orderCount: number;
+    totalCups: number;
+  };
+  getStatsByRange: (start: number, end: number) => {
     totalRevenue: number;
     totalCost: number;
     totalProfit: number;
@@ -102,6 +111,7 @@ const createStore = (set, get) => ({
   products: [...mockProducts],
   saleRecords: [...mockSaleRecords],
   restockRecords: [...mockRestockRecords],
+  stockLogs: [] as StockLog[],
 
   addIngredient: (data) => {
     const now = Date.now();
@@ -112,27 +122,51 @@ const createStore = (set, get) => ({
       updatedAt: now,
     };
     set((state) => ({ ingredients: [...state.ingredients, newItem] }));
-    console.log('[Store] addIngredient', newItem);
   },
 
   updateIngredient: (id, data) => {
-    set((state) => ({
-      ingredients: state.ingredients.map((item) =>
-        item.id === id ? { ...item, ...data, updatedAt: Date.now() } : item
-      ),
-    }));
-    console.log('[Store] updateIngredient', id, data);
+    const { ingredients } = get();
+    const old = ingredients.find((i) => i.id === id);
+    if (!old) return;
+    const now = Date.now();
+
+    const newStock = data.stock !== undefined ? data.stock : old.stock;
+    if (data.stock !== undefined && data.stock !== old.stock) {
+      const log: StockLog = {
+        id: generateId(),
+        ingredientId: id,
+        ingredientName: data.name || old.name,
+        type: 'manual_edit',
+        changeAmount: roundTo(data.stock - old.stock, 2),
+        stockBefore: old.stock,
+        stockAfter: data.stock,
+        unit: old.unit,
+        source: '手动修改库存',
+        createdAt: now,
+      };
+      set((state) => ({
+        ingredients: state.ingredients.map((item) =>
+          item.id === id ? { ...item, ...data, updatedAt: now } : item
+        ),
+        stockLogs: [log, ...state.stockLogs],
+      }));
+    } else {
+      set((state) => ({
+        ingredients: state.ingredients.map((item) =>
+          item.id === id ? { ...item, ...data, updatedAt: now } : item
+        ),
+      }));
+    }
   },
 
   deleteIngredient: (id) => {
     set((state) => ({
       ingredients: state.ingredients.filter((item) => item.id !== id),
     }));
-    console.log('[Store] deleteIngredient', id);
   },
 
   restockIngredient: (id, amount, totalPrice) => {
-    const { ingredients, restockRecords } = get();
+    const { ingredients } = get();
     const ingredient = ingredients.find((i) => i.id === id);
     if (!ingredient) return;
 
@@ -146,6 +180,18 @@ const createStore = (set, get) => ({
       totalPrice,
       createdAt: now,
     };
+    const log: StockLog = {
+      id: generateId(),
+      ingredientId: id,
+      ingredientName: ingredient.name,
+      type: 'restock',
+      changeAmount: amount,
+      stockBefore: ingredient.stock,
+      stockAfter: ingredient.stock + amount,
+      unit: ingredient.unit,
+      source: `补货 +${amount}${ingredient.unit}`,
+      createdAt: now,
+    };
 
     set((state) => ({
       ingredients: state.ingredients.map((item) =>
@@ -154,8 +200,8 @@ const createStore = (set, get) => ({
           : item
       ),
       restockRecords: [record, ...state.restockRecords],
+      stockLogs: [log, ...state.stockLogs],
     }));
-    console.log('[Store] restockIngredient', id, amount, totalPrice);
   },
 
   getIngredientById: (id) => {
@@ -171,7 +217,6 @@ const createStore = (set, get) => ({
       updatedAt: now,
     };
     set((state) => ({ products: [...state.products, newItem] }));
-    console.log('[Store] addProduct', newItem);
   },
 
   updateProduct: (id, data) => {
@@ -180,14 +225,12 @@ const createStore = (set, get) => ({
         item.id === id ? { ...item, ...data, updatedAt: Date.now() } : item
       ),
     }));
-    console.log('[Store] updateProduct', id, data);
   },
 
   deleteProduct: (id) => {
     set((state) => ({
       products: state.products.filter((item) => item.id !== id),
     }));
-    console.log('[Store] deleteProduct', id);
   },
 
   getProductById: (id) => {
@@ -254,11 +297,27 @@ const createStore = (set, get) => ({
       return ing;
     });
 
+    const newLogs: StockLog[] = product.recipe.map((r) => {
+      const ing = state.ingredients.find((i) => i.id === r.ingredientId);
+      return {
+        id: generateId(),
+        ingredientId: r.ingredientId,
+        ingredientName: ing?.name || '未知原料',
+        type: 'sale_deduct' as const,
+        changeAmount: -(r.amount * quantity),
+        stockBefore: ing?.stock || 0,
+        stockAfter: (ing?.stock || 0) - r.amount * quantity,
+        unit: ing?.unit || 'g' as const,
+        source: `制作${product.name}×${quantity}`,
+        createdAt: now,
+      };
+    });
+
     set({
       ingredients: newIngredients,
       saleRecords: [record, ...state.saleRecords],
+      stockLogs: [...newLogs, ...state.stockLogs],
     });
-    console.log('[Store] makeSale', record);
     return { success: true, message: `成功售出${quantity}杯${product.name}`, record };
   },
 
@@ -310,6 +369,28 @@ const createStore = (set, get) => ({
       totalCost: roundTo(totalCost, 2),
       totalProfit: roundTo(totalRevenue - totalCost, 2),
       orderCount: todayRecords.length,
+      totalCups,
+    };
+  },
+
+  getStatsByRange: (start: number, end: number) => {
+    const { saleRecords } = get();
+    const records = saleRecords.filter((r) => r.createdAt >= start && r.createdAt < end);
+    let totalRevenue = 0;
+    let totalCost = 0;
+    let totalCups = 0;
+
+    records.forEach((r) => {
+      totalRevenue += r.totalRevenue;
+      totalCost += r.totalCost;
+      totalCups += r.quantity;
+    });
+
+    return {
+      totalRevenue: roundTo(totalRevenue, 2),
+      totalCost: roundTo(totalCost, 2),
+      totalProfit: roundTo(totalRevenue - totalCost, 2),
+      orderCount: records.length,
       totalCups,
     };
   },
@@ -405,8 +486,8 @@ const createStore = (set, get) => ({
       products: [...mockProducts],
       saleRecords: [...mockSaleRecords],
       restockRecords: [...mockRestockRecords],
+      stockLogs: [],
     });
-    console.log('[Store] resetToDefault');
   },
 });
 
@@ -416,7 +497,16 @@ export const useAppStore = create<AppState>()(
     {
       name: STORAGE_KEY,
       storage: taroStorage,
-      version: 1,
+      version: 2,
+      migrate: (persistedState: any, version: number) => {
+        if (version < 2) {
+          return {
+            ...(persistedState as object),
+            stockLogs: [],
+          };
+        }
+        return persistedState;
+      },
     }
   )
 );

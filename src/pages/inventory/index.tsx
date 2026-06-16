@@ -122,8 +122,13 @@ const InventoryPage: React.FC = () => {
       {/* 头部 */}
       <View className={styles.header}>
         <Text className={styles.title}>库存管理</Text>
-        <View className={styles.addBtn} onClick={handleAdd}>
-          + 新增原料
+        <View style={{ display: 'flex', gap: '16rpx' }}>
+          <View className={styles.logBtn} onClick={() => Taro.navigateTo({ url: '/pages/stock-logs/index' })}>
+            📋 流水
+          </View>
+          <View className={styles.addBtn} onClick={handleAdd}>
+            + 新增
+          </View>
         </View>
       </View>
 

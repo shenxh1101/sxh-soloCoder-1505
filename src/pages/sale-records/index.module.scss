@@ -5,51 +5,40 @@
 }
 
 .filterBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: $spacing-md $page-padding;
+  padding: $spacing-md $page-padding $spacing-sm;
   background: $color-bg-card;
-  border-radius: 0 0 $radius-lg $radius-lg;
   box-shadow: $shadow-card;
-  margin-bottom: $spacing-md;
 
-  .datePicker {
+  .dateRange {
     display: flex;
     align-items: center;
     gap: $spacing-sm;
-
-    .dateNav {
-      width: 56rpx;
-      height: 56rpx;
-      border-radius: $radius-round;
-      background: $color-bg-page;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: $font-size-md;
-      color: $color-text-secondary;
-      transition: all $transition-base;
-
-      &:active {
-        background: $color-bg-hover;
-        transform: scale(0.92);
-      }
-    }
-
-    .dateText {
-      font-size: $font-size-md;
-      font-weight: $font-weight-semibold;
-      color: $color-text-primary;
-      min-width: 200rpx;
-      text-align: center;
-    }
+    margin-bottom: $spacing-sm;
   }
 
-  .productFilter {
+  .dateBtn {
+    padding: $spacing-xs $spacing-md;
+    background: $color-bg-page;
+    border-radius: $radius-button;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-text-primary;
+  }
+
+  .dateSep {
+    font-size: $font-size-sm;
+    color: $color-text-tertiary;
+  }
+
+  .filterRow {
+    display: flex;
+    gap: $spacing-sm;
+  }
+
+  .filterBtn {
     display: flex;
     align-items: center;
-    gap: $spacing-xs;
+    gap: 6rpx;
     padding: $spacing-xs $spacing-md;
     background: $color-primary-bg;
     border-radius: $radius-button;
@@ -57,45 +46,84 @@
     color: $color-primary;
     font-weight: $font-weight-medium;
 
-    .filterArrow {
+    .arrow {
       font-size: 16rpx;
     }
   }
 }
 
-.dayGroup {
-  margin-bottom: $spacing-lg;
+.quickRange {
+  display: flex;
+  gap: $spacing-sm;
+  padding: $spacing-sm $page-padding;
+  background: $color-bg-card;
+
+  .qrBtn {
+    padding: $spacing-xs $spacing-md;
+    border-radius: $radius-button;
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+    background: $color-bg-page;
+    transition: all $transition-base;
+  }
+
+  .qrActive {
+    background: rgba(255, 138, 80, 0.12);
+    color: $color-primary;
+    font-weight: $font-weight-medium;
+  }
 }
 
-.dayHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 $page-padding;
-  margin-bottom: $spacing-sm;
+.summaryCard {
+  margin: $spacing-md $page-padding;
+  background: linear-gradient(135deg, #FF8A50 0%, #FFB088 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  color: #fff;
 
-  .dayDate {
-    font-size: $font-size-sm;
-    font-weight: $font-weight-semibold;
-    color: $color-text-primary;
+  .smRow {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: $spacing-sm;
   }
 
-  .daySummary {
+  .smRow2 {
     display: flex;
-    gap: $spacing-md;
-    font-size: $font-size-xs;
-    color: $color-text-tertiary;
+    justify-content: space-around;
+    padding-top: $spacing-sm;
+    border-top: 1rpx dashed rgba(255, 255, 255, 0.3);
+  }
 
-    .dsItem {
-      .dsValue {
-        font-weight: $font-weight-semibold;
-        color: $color-text-secondary;
+  .smItem {
+    text-align: center;
 
-        &.rev { color: $color-price; }
-        &.profit { color: $color-profit; }
-      }
+    .smLabel {
+      display: block;
+      font-size: 22rpx;
+      opacity: 0.85;
+      margin-bottom: 4rpx;
+    }
+
+    .smValue {
+      font-size: 36rpx;
+      font-weight: bold;
+
+      &.rev { color: #fff; }
+      &.cost { color: rgba(255, 255, 255, 0.85); }
+      &.profit { color: #FFF9C4; }
+    }
+
+    .smValue2 {
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
     }
   }
+}
+
+.sectionTitle {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  padding: $spacing-sm $page-padding;
 }
 
 .recordCard {
@@ -128,8 +156,6 @@
     padding: 2rpx 12rpx;
     border-radius: $radius-xs;
     font-size: $font-size-xs;
-    background: rgba(255, 138, 80, 0.1);
-    color: $color-primary;
     margin-bottom: $spacing-sm;
   }
 
@@ -152,6 +178,7 @@
         font-size: $font-size-sm;
         font-weight: $font-weight-semibold;
 
+        &.qty { color: $color-text-primary; }
         &.price { color: $color-price; }
         &.cost { color: $color-cost; }
         &.profit { color: $color-profit; }
@@ -174,12 +201,4 @@
     color: $color-text-tertiary;
     line-height: 1.6;
   }
-}
-
-.sectionTitle {
-  font-size: $font-size-md;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  padding: 0 $page-padding;
-  margin-bottom: $spacing-sm;
 }

@@ -9,6 +9,7 @@ export default defineAppConfig({
     'pages/ingredient-detail/index',
     'pages/ingredient-edit/index',
     'pages/sale-records/index',
+    'pages/stock-logs/index',
   ],
   window: {
     backgroundTextStyle: 'light',

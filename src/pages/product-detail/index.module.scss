@@ -55,6 +55,38 @@
       }
     }
   }
+
+  .makeInfoRow {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    margin-top: $spacing-md;
+    padding-top: $spacing-md;
+    border-top: 1rpx dashed rgba(255, 255, 255, 0.4);
+
+    .makeInfoLabel {
+      font-size: $font-size-sm;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .makeInfoCups {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-bold;
+    }
+
+    .makeOk {
+      color: #E8F5E9;
+    }
+
+    .makeNo {
+      color: #FFCDD2;
+    }
+
+    .makeInfoLimit {
+      font-size: $font-size-xs;
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
 }
 
 .sectionBlock {
@@ -124,6 +156,24 @@
   .riUnit {
     font-size: $font-size-xs;
     color: $color-text-tertiary;
+  }
+
+  .riStock {
+    display: block;
+    font-size: $font-size-xs;
+    margin-top: 4rpx;
+
+    &.safe {
+      color: $color-text-tertiary;
+    }
+
+    &.warning {
+      color: $color-stock-normal;
+    }
+
+    &.critical {
+      color: $color-stock-warning;
+    }
   }
 
   .riAmount {

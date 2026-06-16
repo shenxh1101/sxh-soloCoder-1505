@@ -134,6 +134,17 @@ const ProductDetailPage: React.FC = () => {
               <Text className={styles.piValue}>{formatPrice(profit)}</Text>
             </View>
           </View>
+          <View className={styles.makeInfoRow}>
+            <Text className={styles.makeInfoLabel}>可制作</Text>
+            <Text className={classnames(styles.makeInfoCups, makeInfo.canMake ? styles.makeOk : styles.makeNo)}>
+              {makeInfo.minServings} 杯
+            </Text>
+            {makeInfo.limitingName && (
+              <Text className={styles.makeInfoLimit}>
+                (瓶颈: {makeInfo.limitingName})
+              </Text>
+            )}
+          </View>
         </View>
 
         {/* 配方清单 */}
@@ -153,6 +164,7 @@ const ProductDetailPage: React.FC = () => {
                 const cat = ing?.category || '其他';
                 const iconStyle = categoryColorMap[cat] || categoryColorMap['其他'];
                 const stockStatus = ing ? getStockStatus(ing.stock, ing.warningThreshold) : 'safe';
+                const ingCanMake = ing && d.amount > 0 ? Math.floor(ing.stock / d.amount) : 0;
                 return (
                   <View key={d.ingredientId} className={styles.recipeItem}>
                     <View className={styles.riIcon} style={{ background: iconStyle.bg }}>
@@ -162,7 +174,9 @@ const ProductDetailPage: React.FC = () => {
                       <Text className={styles.riName}>{d.ingredientName}</Text>
                       <Text className={styles.riUnit}>
                         {formatPrice(d.unitPrice)} / {d.unit}
-                        {ing && stockStatus !== 'safe' && ` · 库存${ing.stock}${ing.unit}`}
+                      </Text>
+                      <Text className={classnames(styles.riStock, styles[stockStatus])}>
+                        库存 {ing?.stock || 0}{ing?.unit || d.unit} · 可做 {ingCanMake} 杯
                       </Text>
                     </View>
                     <View className={styles.riAmount}>
