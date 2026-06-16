@@ -1,0 +1,274 @@
+@use '@/styles/variables.scss' as *;
+
+.headerCard {
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  padding: $spacing-xl;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-lg;
+  display: flex;
+  align-items: center;
+  gap: $spacing-lg;
+
+  .iconBox {
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: $radius-lg;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60rpx;
+    flex-shrink: 0;
+  }
+
+  .infoBox {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ingName {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $color-text-primary;
+    margin-bottom: $spacing-xs;
+  }
+
+  .ingCategory {
+    display: inline-block;
+    padding: 4rpx 16rpx;
+    border-radius: $radius-sm;
+    background: $color-primary-bg;
+    color: $color-primary;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    margin-bottom: $spacing-sm;
+  }
+
+  .ingUnit {
+    font-size: $font-size-sm;
+    color: $color-text-tertiary;
+  }
+
+  .statusBadge {
+    padding: $spacing-xs $spacing-md;
+    border-radius: $radius-button;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-semibold;
+    white-space: nowrap;
+    flex-shrink: 0;
+    align-self: flex-start;
+
+    &.safe {
+      background: rgba(126, 211, 33, 0.12);
+      color: $color-stock-safe;
+    }
+    &.warning {
+      background: rgba(245, 166, 35, 0.12);
+      color: $color-stock-normal;
+    }
+    &.critical {
+      background: rgba(245, 63, 63, 0.12);
+      color: $color-stock-warning;
+    }
+  }
+}
+
+.infoCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+
+  .cardTitle {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin-bottom: $spacing-md;
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+  }
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+
+  .gridItem {
+    .label {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+      margin-bottom: 6rpx;
+    }
+    .value {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+
+      &.stock {
+        &.safe { color: $color-stock-safe; }
+        &.warning { color: $color-stock-normal; }
+        &.critical { color: $color-stock-warning; }
+      }
+      &.price { color: $color-price; }
+    }
+    .unit {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+      font-weight: $font-weight-normal;
+      margin-left: 4rpx;
+    }
+  }
+}
+
+.stockBar {
+  margin-top: $spacing-md;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+
+  .barTrack {
+    width: 100%;
+    height: 16rpx;
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: $radius-round;
+    overflow: hidden;
+    margin-bottom: $spacing-sm;
+    position: relative;
+  }
+
+  .barFill {
+    height: 100%;
+    border-radius: $radius-round;
+    transition: all $transition-base;
+
+    &.safe { background: linear-gradient(90deg, #7ED321, #A8E063); }
+    &.warning { background: linear-gradient(90deg, #F5A623, #FFB84D); }
+    &.critical { background: linear-gradient(90deg, #F53F3F, #FF7875); }
+  }
+
+  .barLabel {
+    display: flex;
+    justify-content: space-between;
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+  }
+}
+
+.recordList {
+  .recordItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-md 0;
+
+    &:not(:last-child) {
+      border-bottom: 1rpx solid $color-divider;
+    }
+  }
+
+  .recordLeft {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+  }
+
+  .recordIcon {
+    width: 56rpx;
+    height: 56rpx;
+    border-radius: $radius-round;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28rpx;
+    flex-shrink: 0;
+
+    &.in {
+      background: rgba(126, 211, 33, 0.12);
+    }
+    &.out {
+      background: rgba(255, 138, 80, 0.12);
+    }
+  }
+
+  .recordInfo {
+    .recordName {
+      font-size: $font-size-sm;
+      color: $color-text-primary;
+      font-weight: $font-weight-medium;
+      margin-bottom: 4rpx;
+    }
+    .recordTime {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+    }
+  }
+
+  .recordRight {
+    text-align: right;
+
+    .recordAmt {
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
+      margin-bottom: 4rpx;
+
+      &.in { color: $color-stock-safe; }
+      &.out { color: $color-primary; }
+    }
+    .recordPrice {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+    }
+  }
+}
+
+.emptyRecord {
+  padding: $spacing-lg;
+  text-align: center;
+  color: $color-text-tertiary;
+  font-size: $font-size-sm;
+}
+
+.bottomBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: $spacing-md $page-padding calc($spacing-md + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: $spacing-md;
+
+  .btn {
+    @include button-reset;
+    flex: 1;
+    height: $button-height-lg;
+    border-radius: $radius-button;
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    transition: all $transition-base;
+
+    &:active {
+      opacity: 0.9;
+      transform: scale(0.98);
+    }
+
+    &.edit {
+      background: $color-bg-hover;
+      color: $color-text-secondary;
+    }
+
+    &.restock {
+      background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+      color: #fff;
+      box-shadow: 0 4rpx 16rpx rgba(255, 138, 80, 0.35);
+    }
+  }
+}
+
+.pageContent {
+  padding-bottom: 180rpx;
+}

@@ -1,0 +1,316 @@
+@use '@/styles/variables.scss' as *;
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-lg;
+
+  .title {
+    font-size: $font-size-xxl;
+    font-weight: $font-weight-bold;
+    color: $color-text-primary;
+  }
+
+  .addBtn {
+    @include button-reset;
+    height: $button-height-sm;
+    padding: 0 $spacing-md;
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+    border-radius: $radius-button;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    gap: $spacing-xs;
+    transition: all $transition-base;
+
+    &:active {
+      opacity: 0.9;
+      transform: scale(0.96);
+    }
+  }
+}
+
+.summaryCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+
+  .sumCard {
+    background: $color-bg-card;
+    border-radius: $radius-md;
+    padding: $spacing-md;
+    box-shadow: $shadow-card;
+    text-align: center;
+
+    .sumLabel {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+      margin-bottom: 6rpx;
+    }
+
+    .sumValue {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-bold;
+
+      &.warning {
+        color: $color-stock-warning;
+      }
+
+      &.safe {
+        color: $color-stock-safe;
+      }
+
+      &.total {
+        color: $color-primary;
+      }
+    }
+
+    .sumUnit {
+      font-size: $font-size-xs;
+      font-weight: $font-weight-normal;
+      color: $color-text-tertiary;
+      margin-left: 2rpx;
+    }
+  }
+}
+
+.filterBar {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+  flex-wrap: wrap;
+
+  .filterItem {
+    padding: $spacing-xs $spacing-md;
+    border-radius: $radius-button;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    background: $color-bg-card;
+    color: $color-text-secondary;
+    box-shadow: 0 1rpx 6rpx rgba(0, 0, 0, 0.04);
+    white-space: nowrap;
+    transition: all $transition-base;
+
+    &.active {
+      background: $color-primary-bg;
+      color: $color-primary;
+    }
+  }
+}
+
+.categoryGroup {
+  margin-bottom: $spacing-lg;
+
+  .categoryTitle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-xs 0;
+    margin-bottom: $spacing-sm;
+
+    .titleText {
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+    }
+
+    .countBadge {
+      padding: 2rpx 16rpx;
+      border-radius: $radius-round;
+      background: $color-bg-page;
+      font-size: $font-size-xs;
+      color: $color-text-secondary;
+    }
+  }
+}
+
+.ingredientCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-sm;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.995);
+  }
+
+  .cardMain {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-sm;
+  }
+
+  .leftInfo {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ingIcon {
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: $radius-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40rpx;
+    flex-shrink: 0;
+    background: $color-primary-bg;
+  }
+
+  .ingText {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ingName {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    @include text-ellipsis;
+    margin-bottom: 4rpx;
+  }
+
+  .ingPrice {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+  }
+
+  .statusBadge {
+    padding: 6rpx 16rpx;
+    border-radius: $radius-sm;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &.safe {
+      background: rgba(126, 211, 33, 0.12);
+      color: $color-stock-safe;
+    }
+
+    &.warning {
+      background: rgba(245, 166, 35, 0.12);
+      color: $color-stock-normal;
+    }
+
+    &.critical {
+      background: rgba(245, 63, 63, 0.12);
+      color: $color-stock-warning;
+    }
+  }
+
+  .stockRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: $spacing-sm;
+    border-top: 1rpx dashed $color-divider;
+  }
+
+  .stockInfo {
+    display: flex;
+    align-items: baseline;
+    gap: $spacing-xs;
+
+    .stockNum {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-bold;
+      color: $color-text-primary;
+
+      &.safe {
+        color: $color-stock-safe;
+      }
+
+      &.warning {
+        color: $color-stock-normal;
+      }
+
+      &.critical {
+        color: $color-stock-warning;
+      }
+    }
+
+    .stockUnit {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+    }
+
+    .thresholdText {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+      margin-left: $spacing-sm;
+    }
+  }
+
+  .actionBtns {
+    display: flex;
+    gap: $spacing-sm;
+  }
+
+  .restockBtn {
+    @include button-reset;
+    height: 56rpx;
+    padding: 0 $spacing-md;
+    background: $color-primary-bg;
+    color: $color-primary;
+    border-radius: $radius-button;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    transition: all $transition-base;
+
+    &:active {
+      opacity: 0.85;
+      transform: scale(0.96);
+    }
+  }
+
+  .editBtn {
+    @include button-reset;
+    height: 56rpx;
+    padding: 0 $spacing-md;
+    background: $color-bg-page;
+    color: $color-text-secondary;
+    border-radius: $radius-button;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    transition: all $transition-base;
+
+    &:active {
+      opacity: 0.85;
+      transform: scale(0.96);
+    }
+  }
+}
+
+.emptyWrapper {
+  padding: $spacing-xl * 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  .emptyIcon {
+    width: 200rpx;
+    height: 200rpx;
+    border-radius: $radius-round;
+    background: $color-bg-page;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 100rpx;
+    margin-bottom: $spacing-md;
+  }
+
+  .emptyText {
+    color: $color-text-tertiary;
+    font-size: $font-size-sm;
+  }
+}

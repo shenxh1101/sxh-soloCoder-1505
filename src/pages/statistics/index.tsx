@@ -1,0 +1,427 @@
+import React, { useState, useMemo } from 'react';
+import { View, Text, ScrollView, Input, Picker } from '@tarojs/components';
+import Taro from '@tarojs/taro';
+import classnames from 'classnames';
+import { useAppStore } from '@/store';
+import { categoryLabels, categoryColors, formatPrice, calculateSuggestedPrice, roundTo } from '@/utils';
+import type { Ingredient, RecipeItem, ProductCategory } from '@/types';
+import styles from './index.module.scss';
+
+interface CalcRecipeItem extends RecipeItem {
+  ingredientId: string;
+  amount: number;
+}
+
+const StatisticsPage: React.FC = () => {
+  const ingredients = useAppStore((s) => s.ingredients);
+  const saleRecords = useAppStore((s) => s.saleRecords);
+  const getProductRank = useAppStore((s) => s.getProductRank);
+  const getTodayStats = useAppStore((s) => s.getTodayStats);
+  const getCategoryStats = useAppStore((s) => s.getCategoryStats);
+  const addProduct = useAppStore((s) => s.addProduct);
+
+  const todayStats = useMemo(() => getTodayStats(), [getTodayStats, saleRecords]);
+  const categoryStats = useMemo(() => getCategoryStats(), [getCategoryStats, saleRecords]);
+  const [sortBy, setSortBy] = useState<'quantity' | 'profit'>('quantity');
+  const rankList = useMemo(() => getProductRank(sortBy).slice(0, 8), [getProductRank, sortBy, saleRecords]);
+
+  // 新品计算器状态
+  const [newName, setNewName] = useState('');
+  const [newCategory, setNewCategory] = useState<ProductCategory>('milk_tea');
+  const [calcRecipe, setCalcRecipe] = useState<CalcRecipeItem[]>([
+    { ingredientId: ingredients[0]?.id || '', amount: 100 },
+  ]);
+  const [targetProfitRate, setTargetProfitRate] = useState(0.66);
+
+  const calcResult = useMemo(() => {
+    let totalCost = 0;
+    const details = calcRecipe.map((r) => {
+      const ing = ingredients.find((i) => i.id === r.ingredientId);
+      const cost = ing ? ing.pricePerUnit * r.amount : 0;
+      totalCost += cost;
+      return { ...r, cost: roundTo(cost, 4), ingredient: ing };
+    });
+    totalCost = roundTo(totalCost, 4);
+    const suggestedPrice = calculateSuggestedPrice(totalCost, targetProfitRate);
+    const unitProfit = roundTo(suggestedPrice - totalCost, 2);
+    const profitRate = suggestedPrice > 0 ? roundTo((unitProfit / suggestedPrice) * 100, 0) : 0;
+
+    return { totalCost, suggestedPrice, unitProfit, profitRate, details };
+  }, [calcRecipe, ingredients, targetProfitRate]);
+
+  const addRecipeRow = () => {
+    const availableId = ingredients.find(
+      (i) => !calcRecipe.some((r) => r.ingredientId === i.id)
+    )?.id;
+    if (availableId) {
+      setCalcRecipe([...calcRecipe, { ingredientId: availableId, amount: 50 }]);
+    } else {
+      Taro.showToast({ title: '所有原料已添加', icon: 'none' });
+    }
+  };
+
+  const removeRecipeRow = (idx: number) => {
+    if (calcRecipe.length <= 1) return;
+    setCalcRecipe(calcRecipe.filter((_, i) => i !== idx));
+  };
+
+  const updateRecipeAmount = (idx: number, val: string) => {
+    const n = parseFloat(val) || 0;
+    const arr = [...calcRecipe];
+    arr[idx] = { ...arr[idx], amount: n };
+    setCalcRecipe(arr);
+  };
+
+  const updateRecipeIngredient = (idx: number, ingId: string) => {
+    const arr = [...calcRecipe];
+    arr[idx] = { ...arr[idx], ingredientId: ingId };
+    setCalcRecipe(arr);
+  };
+
+  const handleCreateProduct = () => {
+    if (!newName.trim()) {
+      Taro.showToast({ title: '请输入产品名称', icon: 'none' });
+      return;
+    }
+    if (calcResult.totalCost <= 0) {
+      Taro.showToast({ title: '请配置有效配方', icon: 'none' });
+      return;
+    }
+
+    Taro.showModal({
+      title: '确认创建产品',
+      content: `产品：${newName}\n成本：${formatPrice(calcResult.totalCost)}\n建议售价：${formatPrice(calcResult.suggestedPrice)}\n毛利率：${calcResult.profitRate}%`,
+      confirmText: '创建产品',
+      cancelText: '取消',
+      confirmColor: '#FF8A50',
+      success: (res) => {
+        if (res.confirm) {
+          addProduct({
+            name: newName.trim(),
+            category: newCategory,
+            sellingPrice: calcResult.suggestedPrice,
+            recipe: calcRecipe.filter((r) => r.ingredientId && r.amount > 0),
+            description: `新品自动创建 · 目标毛利率${Math.round(targetProfitRate * 100)}%`,
+          });
+          Taro.showToast({ title: '产品创建成功', icon: 'success' });
+          setNewName('');
+          setCalcRecipe([{ ingredientId: ingredients[0]?.id || '', amount: 100 }]);
+        }
+      },
+    });
+  };
+
+  const ingredientPickerOptions = ingredients.map((i) => i.name);
+
+  const catStatMap = useMemo(() => {
+    const m: Record<string, { qty: number; rev: number }> = {};
+    categoryStats.forEach((c) => {
+      m[c.category] = { qty: c.quantity, rev: c.totalRevenue };
+    });
+    return m;
+  }, [categoryStats]);
+
+  const totalAll = useMemo(() => {
+    let rev = 0, cost = 0, profit = 0, cups = 0;
+    saleRecords.forEach((r) => {
+      rev += r.totalRevenue;
+      cost += r.totalCost;
+      profit += r.totalProfit;
+      cups += r.quantity;
+    });
+    return {
+      revenue: roundTo(rev, 2),
+      cost: roundTo(cost, 2),
+      profit: roundTo(profit, 2),
+      cups,
+    };
+  }, [saleRecords]);
+
+  return (
+    <ScrollView scrollY className={`${styles.pageContainer} pageContainer`}>
+      {/* 整体概览 */}
+      <View className={styles.sectionBlock}>
+        <Text className={styles.sectionTitle}>📊 经营概览</Text>
+        <View className={styles.overviewCards}>
+          <View className={styles.card}>
+            <Text className={styles.cardLabel}>累计营收</Text>
+            <View>
+              <Text className={styles.cardValue}>¥{totalAll.revenue}</Text>
+            </View>
+            <Text className={styles.cardExtra}>累计出杯 {totalAll.cups} 杯</Text>
+          </View>
+          <View className={styles.card}>
+            <Text className={styles.cardLabel}>累计毛利</Text>
+            <View>
+              <Text className={styles.cardValue}>¥{totalAll.profit}</Text>
+            </View>
+            <Text className={styles.cardExtra}>
+              毛利率 {totalAll.revenue > 0 ? Math.round((totalAll.profit / totalAll.revenue) * 100) : 0}%
+            </Text>
+          </View>
+        </View>
+        <View className={styles.quickStats}>
+          <View className={styles.quickItem}>
+            <Text className={styles.qLabel}>今日出杯</Text>
+            <Text className={styles.qValue}>{todayStats.totalCups}杯</Text>
+          </View>
+          <View className={styles.quickItem}>
+            <Text className={styles.qLabel}>今日营收</Text>
+            <Text className={styles.qValue}>¥{todayStats.totalRevenue}</Text>
+          </View>
+          <View className={styles.quickItem}>
+            <Text className={styles.qLabel}>今日毛利</Text>
+            <Text className={styles.qValue}>¥{todayStats.totalProfit}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* 分类占比 */}
+      <View className={styles.sectionBlock}>
+        <Text className={styles.sectionTitle}>🧋 分类销售</Text>
+        <View className={styles.quickStats}>
+          {(['milk_tea', 'fruit_tea', 'coffee'] as ProductCategory[]).map((cat) => {
+            const data = catStatMap[cat] || { qty: 0, rev: 0 };
+            const cc = categoryColors[cat];
+            return (
+              <View key={cat} className={styles.quickItem} style={{ padding: '8rpx 0' }}>
+                <View
+                  style={{
+                    display: 'inline-flex',
+                    padding: '4rpx 16rpx',
+                    borderRadius: '8rpx',
+                    background: cc.bg,
+                    color: cc.color,
+                    fontSize: '22rpx',
+                    marginBottom: 8,
+                  }}
+                >
+                  {categoryLabels[cat]}
+                </View>
+                <Text className={styles.qValue} style={{ fontSize: '28rpx' }}>
+                  {data.qty}杯
+                </Text>
+                <Text className={styles.qLabel}>¥{data.rev}</Text>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* 产品排行 */}
+      <View className={styles.sectionBlock}>
+        <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24rpx' }}>
+          <Text className={styles.sectionTitle} style={{ marginBottom: 0 }}>🏆 热销排行</Text>
+          <View className={styles.sortTabs} style={{ marginBottom: 0 }}>
+            <View
+              className={classnames(styles.tabItem, sortBy === 'quantity' && styles.active)}
+              onClick={() => setSortBy('quantity')}
+            >
+              按销量
+            </View>
+            <View
+              className={classnames(styles.tabItem, sortBy === 'profit' && styles.active)}
+              onClick={() => setSortBy('profit')}
+            >
+              按利润
+            </View>
+          </View>
+        </View>
+
+        {rankList.length === 0 ? (
+          <View className={styles.emptyRank}>暂无销售数据，去首页卖几杯吧～</View>
+        ) : (
+          <View className={styles.rankList}>
+            {rankList.map((item, idx) => {
+              const cc = categoryColors[item.category];
+              return (
+                <View key={item.productId} className={styles.rankCard}>
+                  <View className={styles.rankHeader}>
+                    <View className={styles.rankLeft}>
+                      <View
+                        className={classnames(
+                          styles.rankNo,
+                          idx === 0 && styles.top1,
+                          idx === 1 && styles.top2,
+                          idx === 2 && styles.top3
+                        )}
+                      >
+                        {idx + 1}
+                      </View>
+                      <Text className={styles.rankName}>{item.productName}</Text>
+                    </View>
+                    <View className={styles.rankTag} style={{ background: cc.bg, color: cc.color }}>
+                      {categoryLabels[item.category]}
+                    </View>
+                  </View>
+                  <View className={styles.rankBody}>
+                    <View className={styles.rankStat}>
+                      <Text className={styles.statLabel}>销量</Text>
+                      <Text className={`${styles.statValue} ${styles.qty}`}>
+                        {item.quantity}杯
+                      </Text>
+                    </View>
+                    <View className={styles.rankStat}>
+                      <Text className={styles.statLabel}>营收</Text>
+                      <Text className={`${styles.statValue} ${styles.rev}`}>
+                        ¥{item.totalRevenue}
+                      </Text>
+                    </View>
+                    <View className={styles.rankStat}>
+                      <Text className={styles.statLabel}>总利润</Text>
+                      <Text className={`${styles.statValue} ${styles.profit}`}>
+                        ¥{item.totalProfit}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </View>
+
+      {/* 新品成本计算器 */}
+      <View className={styles.sectionBlock}>
+        <Text className={styles.sectionTitle}>✨ 新品成本计算器</Text>
+        <View className={styles.calculatorCard}>
+          <View className={styles.calcHeader}>
+            <Text className={styles.calcTitle}>填配方，自动算成本和售价</Text>
+            <View className={styles.calcBadge}>新品利器</View>
+          </View>
+
+          <View className={styles.formGroup}>
+            <Text className={styles.groupLabel}>产品名称</Text>
+            <View className={styles.inputWrapper}>
+              <Input
+                className={styles.input}
+                placeholder="例如：杨枝甘露"
+                value={newName}
+                onInput={(e) => setNewName(e.detail.value)}
+              />
+            </View>
+          </View>
+
+          <View className={styles.formGroup}>
+            <Text className={styles.groupLabel}>产品分类</Text>
+            <Picker
+              range={['奶茶', '果茶', '咖啡']}
+              rangeKey="label"
+              value={['milk_tea', 'fruit_tea', 'coffee'].indexOf(newCategory)}
+              onChange={(e) => {
+                const cats: ProductCategory[] = ['milk_tea', 'fruit_tea', 'coffee'];
+                setNewCategory(cats[Number(e.detail.value)]);
+              }}
+            >
+              <View className={styles.rowSelect}>
+                <Text>{categoryLabels[newCategory]}</Text>
+                <Text>▼</Text>
+              </View>
+            </Picker>
+          </View>
+
+          <View className={styles.formGroup}>
+            <Text className={styles.groupLabel}>目标毛利率</Text>
+            <View className={styles.rowSelect} style={{ width: '100%' }}>
+              <Picker
+                range={['50% (薄利多销)', '60% (标准)', '66% (推荐)', '70% (高端产品)']}
+                value={[0.5, 0.6, 0.66, 0.7].indexOf(targetProfitRate)}
+                onChange={(e) => {
+                  const vals = [0.5, 0.6, 0.66, 0.7];
+                  setTargetProfitRate(vals[Number(e.detail.value)]);
+                }}
+              >
+                <View style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
+                  <Text>{Math.round(targetProfitRate * 100)}%</Text>
+                  <Text>▼</Text>
+                </View>
+              </Picker>
+            </View>
+          </View>
+
+          <View className={styles.formGroup}>
+            <Text className={styles.groupLabel}>配方配置</Text>
+            <View className={styles.recipeList}>
+              {calcRecipe.map((r, idx) => {
+                const ing = ingredients.find((i) => i.id === r.ingredientId);
+                const cost = ing ? ing.pricePerUnit * r.amount : 0;
+                return (
+                  <View key={idx} className={styles.recipeItem}>
+                    <Picker
+                      range={ingredientPickerOptions}
+                      value={ingredients.findIndex((i) => i.id === r.ingredientId)}
+                      onChange={(e) => {
+                        const ingIdx = Number(e.detail.value);
+                        updateRecipeIngredient(idx, ingredients[ingIdx]?.id || '');
+                      }}
+                    >
+                      <Text className={styles.riName}>
+                        {ing?.name || '请选择原料'}
+                      </Text>
+                    </Picker>
+                    <Input
+                      className={styles.riInput}
+                      type="digit"
+                      value={r.amount.toString()}
+                      onInput={(e) => updateRecipeAmount(idx, e.detail.value)}
+                    />
+                    <Text className={styles.riUnit}>{ing?.unit || 'g'}</Text>
+                    <Text className={styles.riCost}>¥{roundTo(cost, 2)}</Text>
+                    <View className={styles.riRemove} onClick={() => removeRecipeRow(idx)}>
+                      ×
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+            <View className={styles.addRecipeBtn} onClick={addRecipeRow}>
+              + 添加原料
+            </View>
+          </View>
+
+          {/* 计算结果 */}
+          <View className={styles.resultBox}>
+            <View className={styles.resRow}>
+              <Text className={styles.resLabel}>物料总成本</Text>
+              <Text className={`${styles.bigValue} ${styles.cost}`}>
+                {formatPrice(calcResult.totalCost)}
+              </Text>
+            </View>
+            <View className={styles.resRow}>
+              <Text className={styles.resLabel}>建议售价 ({Math.round(targetProfitRate * 100)}%毛利)</Text>
+              <Text className={`${styles.bigValue} ${styles.price}`}>
+                {formatPrice(calcResult.suggestedPrice)}
+              </Text>
+            </View>
+            <View className={styles.resRow}>
+              <Text className={styles.resLabel}>单杯毛利</Text>
+              <Text className={`${styles.resValue} ${styles.profit}`}>
+                {formatPrice(calcResult.unitProfit)}
+              </Text>
+            </View>
+            <View className={styles.resRow}>
+              <Text className={styles.resLabel}>实际毛利率</Text>
+              <Text className={`${styles.resValue} ${styles.rate}`}>
+                {calcResult.profitRate}%
+              </Text>
+            </View>
+
+            <View
+              className={classnames('btnPrimary')}
+              style={{ width: '100%', marginTop: '32rpx', justifyContent: 'center' }}
+              onClick={handleCreateProduct}
+            >
+              💾 按此配方创建产品
+            </View>
+
+            <View className={styles.tip}>
+              💡 小提示：建议零售价通常是成本的3~4倍（毛利率66~75%），竞争激烈区域可适当下调至2.5倍（毛利率60%）。
+            </View>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
+  );
+};
+
+export default StatisticsPage;

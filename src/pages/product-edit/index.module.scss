@@ -1,0 +1,312 @@
+@use '@/styles/variables.scss' as *;
+
+.formCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+}
+
+.formRow {
+  margin-bottom: $spacing-md;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .rowLabel {
+    display: block;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin-bottom: $spacing-sm;
+  }
+
+  .textInput {
+    width: 100%;
+    height: 80rpx;
+    padding: 0 $spacing-md;
+    background: $color-bg-page;
+    border: 2rpx solid transparent;
+    border-radius: $radius-md;
+    font-size: $font-size-md;
+    color: $color-text-primary;
+    box-sizing: border-box;
+    transition: all $transition-base;
+
+    &:focus {
+      border-color: $color-primary;
+      background: $color-bg-card;
+    }
+  }
+
+  .textArea {
+    width: 100%;
+    min-height: 140rpx;
+    padding: $spacing-sm $spacing-md;
+    background: $color-bg-page;
+    border: 2rpx solid transparent;
+    border-radius: $radius-md;
+    font-size: $font-size-md;
+    color: $color-text-primary;
+    box-sizing: border-box;
+    transition: all $transition-base;
+
+    &:focus {
+      border-color: $color-primary;
+      background: $color-bg-card;
+    }
+  }
+
+  .pickerBox {
+    width: 100%;
+    height: 80rpx;
+    padding: 0 $spacing-md;
+    background: $color-bg-page;
+    border-radius: $radius-md;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: $font-size-md;
+    color: $color-text-primary;
+  }
+
+  .inputWithUnit {
+    position: relative;
+
+    .unitText {
+      position: absolute;
+      right: $spacing-md;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: $font-size-sm;
+      color: $color-text-tertiary;
+    }
+  }
+}
+
+.recipeSection {
+  .recipeHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-sm;
+  }
+
+  .recipeTitle {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+  }
+
+  .addBtn {
+    @include button-reset;
+    padding: $spacing-xs $spacing-md;
+    background: $color-primary-bg;
+    color: $color-primary;
+    border-radius: $radius-button;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    transition: all $transition-base;
+
+    &:active {
+      opacity: 0.85;
+      transform: scale(0.96);
+    }
+  }
+
+  .recipeItem {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: $spacing-md;
+    background: $color-bg-page;
+    border-radius: $radius-md;
+    margin-bottom: $spacing-sm;
+
+    .riPicker {
+      flex: 1;
+      min-width: 0;
+      height: 64rpx;
+      padding: 0 $spacing-sm;
+      background: $color-bg-card;
+      border-radius: $radius-sm;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: $font-size-xs;
+      color: $color-text-primary;
+      overflow: hidden;
+    }
+
+    .riPickerText {
+      @include text-ellipsis;
+      flex: 1;
+    }
+
+    .riInput {
+      width: 120rpx;
+      height: 64rpx;
+      padding: 0 $spacing-sm;
+      background: $color-bg-card;
+      border-radius: $radius-sm;
+      font-size: $font-size-sm;
+      color: $color-text-primary;
+      text-align: right;
+      box-sizing: border-box;
+    }
+
+    .riUnit {
+      width: 48rpx;
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+      flex-shrink: 0;
+    }
+
+    .riCost {
+      width: 100rpx;
+      font-size: $font-size-xs;
+      color: $color-cost;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .riRemove {
+      width: 48rpx;
+      height: 48rpx;
+      border-radius: $radius-round;
+      background: rgba(245, 63, 63, 0.1);
+      color: $color-error;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: $font-size-md;
+      font-weight: $font-weight-bold;
+      flex-shrink: 0;
+    }
+  }
+}
+
+.calcResult {
+  background: linear-gradient(135deg, rgba(255, 138, 80, 0.08) 0%, rgba(126, 211, 33, 0.08) 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+
+  .resultRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-xs 0;
+
+    &:not(:last-child) {
+      border-bottom: 1rpx dashed $color-divider;
+      margin-bottom: $spacing-xs;
+      padding-bottom: $spacing-sm;
+    }
+  }
+
+  .rLabel {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+
+  .rValue {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+
+    &.cost { color: $color-cost; }
+    &.price { color: $color-price; }
+    &.profit { color: $color-profit; }
+    &.rate { color: $color-info; }
+  }
+
+  .rBig {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    &.profit { color: $color-profit; }
+  }
+
+  .tip {
+    margin-top: $spacing-md;
+    padding: $spacing-sm $spacing-md;
+    background: rgba(74, 144, 217, 0.08);
+    border-radius: $radius-md;
+    font-size: $font-size-xs;
+    color: $color-info;
+    line-height: 1.6;
+  }
+}
+
+.bottomBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: $spacing-md $page-padding calc($spacing-md + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: $spacing-md;
+
+  .btn {
+    @include button-reset;
+    flex: 1;
+    height: $button-height-lg;
+    border-radius: $radius-button;
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    transition: all $transition-base;
+
+    &:active {
+      opacity: 0.9;
+      transform: scale(0.98);
+    }
+
+    &.cancel {
+      background: $color-bg-hover;
+      color: $color-text-secondary;
+    }
+
+    &.save {
+      background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+      color: #fff;
+      box-shadow: 0 4rpx 16rpx rgba(255, 138, 80, 0.35);
+    }
+  }
+}
+
+.pageContent {
+  padding-bottom: 180rpx;
+}
+
+.tagList {
+  display: flex;
+  gap: $spacing-sm;
+
+  .tagItem {
+    flex: 1;
+    padding: $spacing-sm 0;
+    text-align: center;
+    border-radius: $radius-md;
+    background: $color-bg-page;
+    color: $color-text-secondary;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    transition: all $transition-base;
+
+    &.active {
+      color: #fff;
+    }
+
+    &.active.milk_tea {
+      background: linear-gradient(135deg, #8B5A2B 0%, #A0724A 100%);
+    }
+    &.active.fruit_tea {
+      background: linear-gradient(135deg, #FF6B9D 0%, #FF8DB5 100%);
+    }
+    &.active.coffee {
+      background: linear-gradient(135deg, #654321 0%, #8B6914 100%);
+    }
+  }
+}

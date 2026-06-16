@@ -1,0 +1,450 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  padding-bottom: 60rpx;
+}
+
+.sectionBlock {
+  margin-bottom: $spacing-xl;
+}
+
+.sectionTitle {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  padding-left: 4rpx;
+}
+
+.overviewCards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-md;
+
+  .card {
+    background: $color-bg-card;
+    border-radius: $radius-lg;
+    padding: $spacing-lg;
+    box-shadow: $shadow-card;
+
+    &:nth-child(1) {
+      background: linear-gradient(135deg, #FF8A50 0%, #FFB088 100%);
+      color: #fff;
+
+      .cardLabel, .cardUnit { color: rgba(255, 255, 255, 0.9); }
+      .cardValue { color: #fff; }
+    }
+
+    &:nth-child(2) {
+      background: linear-gradient(135deg, #7ED321 0%, #A8E063 100%);
+      color: #fff;
+
+      .cardLabel, .cardUnit { color: rgba(255, 255, 255, 0.9); }
+      .cardValue { color: #fff; }
+    }
+  }
+
+  .cardLabel {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    margin-bottom: $spacing-xs;
+  }
+
+  .cardValue {
+    font-size: $font-size-xxl;
+    font-weight: $font-weight-bold;
+    line-height: 1.2;
+  }
+
+  .cardUnit {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-normal;
+    margin-left: 4rpx;
+  }
+
+  .cardExtra {
+    margin-top: $spacing-sm;
+    font-size: $font-size-xs;
+    opacity: 0.85;
+  }
+}
+
+.quickStats {
+  display: flex;
+  gap: $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  box-shadow: $shadow-card;
+
+  .quickItem {
+    flex: 1;
+    text-align: center;
+
+    .qLabel {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+      margin-bottom: 4rpx;
+    }
+
+    .qValue {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-bold;
+      color: $color-text-primary;
+    }
+  }
+}
+
+.sortTabs {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+
+  .tabItem {
+    padding: $spacing-xs $spacing-lg;
+    border-radius: $radius-button;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    background: $color-bg-card;
+    color: $color-text-secondary;
+    box-shadow: $shadow-card;
+    transition: all $transition-base;
+
+    &.active {
+      background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+      color: $color-text-white;
+      box-shadow: 0 4rpx 16rpx rgba(255, 138, 80, 0.35);
+    }
+  }
+}
+
+.rankList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.rankCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md $spacing-lg;
+  box-shadow: $shadow-card;
+
+  .rankHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-sm;
+  }
+
+  .rankLeft {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rankNo {
+    width: 48rpx;
+    height: 48rpx;
+    border-radius: $radius-round;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    background: $color-bg-page;
+    color: $color-text-secondary;
+    flex-shrink: 0;
+
+    &.top1 {
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      color: #fff;
+    }
+    &.top2 {
+      background: linear-gradient(135deg, #C0C0C0 0%, #A8A8A8 100%);
+      color: #fff;
+    }
+    &.top3 {
+      background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%);
+      color: #fff;
+    }
+  }
+
+  .rankName {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    flex: 1;
+    @include text-ellipsis;
+  }
+
+  .rankTag {
+    padding: 4rpx 12rpx;
+    border-radius: $radius-sm;
+    font-size: $font-size-xs;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .rankBody {
+    display: flex;
+    justify-content: space-between;
+    padding-top: $spacing-sm;
+    border-top: 1rpx dashed $color-divider;
+  }
+
+  .rankStat {
+    text-align: center;
+    flex: 1;
+
+    .statLabel {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+      margin-bottom: 4rpx;
+    }
+
+    .statValue {
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
+
+      &.qty { color: $color-primary; }
+      &.rev { color: $color-price; }
+      &.profit { color: $color-profit; }
+    }
+  }
+}
+
+.calculatorCard {
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  border: 2rpx dashed rgba(255, 138, 80, 0.3);
+}
+
+.calcHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-lg;
+
+  .calcTitle {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: $color-text-primary;
+  }
+
+  .calcBadge {
+    padding: 6rpx 16rpx;
+    background: $color-primary-bg;
+    color: $color-primary;
+    border-radius: $radius-button;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+  }
+}
+
+.formGroup {
+  margin-bottom: $spacing-lg;
+
+  .groupLabel {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin-bottom: $spacing-sm;
+    display: block;
+  }
+
+  .rowInput {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    margin-bottom: $spacing-sm;
+  }
+
+  .inputWrapper {
+    flex: 1;
+    position: relative;
+
+    .input {
+      width: 100%;
+      height: 72rpx;
+      padding: 0 $spacing-md;
+      background: $color-bg-page;
+      border: 2rpx solid transparent;
+      border-radius: $radius-md;
+      font-size: $font-size-sm;
+      color: $color-text-primary;
+      box-sizing: border-box;
+      transition: all $transition-base;
+
+      &:focus {
+        border-color: $color-primary;
+        background: $color-bg-card;
+      }
+    }
+
+    .inputSuffix {
+      position: absolute;
+      right: $spacing-md;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+    }
+  }
+
+  .rowSelect {
+    width: 200rpx;
+    height: 72rpx;
+    background: $color-bg-page;
+    border-radius: $radius-md;
+    padding: 0 $spacing-md;
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.recipeList {
+  margin-bottom: $spacing-md;
+}
+
+.recipeItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-sm;
+
+  .riName {
+    flex: 1;
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+    @include text-ellipsis;
+  }
+
+  .riInput {
+    width: 140rpx;
+    height: 56rpx;
+    background: $color-bg-card;
+    border-radius: $radius-sm;
+    padding: 0 $spacing-sm;
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+    text-align: right;
+  }
+
+  .riUnit {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    width: 40rpx;
+  }
+
+  .riCost {
+    font-size: $font-size-sm;
+    color: $color-cost;
+    width: 100rpx;
+    text-align: right;
+  }
+
+  .riRemove {
+    width: 48rpx;
+    height: 48rpx;
+    border-radius: $radius-round;
+    background: rgba(245, 63, 63, 0.1);
+    color: $color-error;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $font-size-md;
+    font-weight: $font-weight-bold;
+  }
+}
+
+.addRecipeBtn {
+  @include button-reset;
+  width: 100%;
+  height: 72rpx;
+  background: $color-primary-bg;
+  color: $color-primary;
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  border: 2rpx dashed $color-primary-light;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.99);
+  }
+}
+
+.resultBox {
+  margin-top: $spacing-lg;
+  padding: $spacing-lg;
+  background: linear-gradient(135deg, rgba(255, 138, 80, 0.08) 0%, rgba(126, 211, 33, 0.08) 100%);
+  border-radius: $radius-lg;
+
+  .resRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-xs 0;
+
+    &:not(:last-child) {
+      border-bottom: 1rpx dashed $color-divider;
+      margin-bottom: $spacing-xs;
+      padding-bottom: $spacing-sm;
+    }
+  }
+
+  .resLabel {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+
+  .resValue {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+
+    &.cost { color: $color-cost; }
+    &.price { color: $color-price; }
+    &.profit { color: $color-profit; }
+    &.rate { color: $color-info; }
+  }
+
+  .bigValue {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+
+    &.cost { color: $color-cost; }
+    &.price { color: $color-price; }
+  }
+
+  .tip {
+    margin-top: $spacing-md;
+    padding: $spacing-sm $spacing-md;
+    background: rgba(74, 144, 217, 0.08);
+    border-radius: $radius-md;
+    font-size: $font-size-xs;
+    color: $color-info;
+    line-height: 1.6;
+  }
+}
+
+.emptyRank {
+  padding: $spacing-xl;
+  text-align: center;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  color: $color-text-tertiary;
+  font-size: $font-size-sm;
+}

@@ -1,0 +1,234 @@
+@use '@/styles/variables.scss' as *;
+
+.headerCard {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-xl;
+  padding: $spacing-xl;
+  color: #fff;
+  margin-bottom: $spacing-lg;
+  box-shadow: 0 8rpx 24rpx rgba(255, 138, 80, 0.25);
+
+  .catTag {
+    display: inline-block;
+    padding: 6rpx 20rpx;
+    border-radius: $radius-round;
+    background: rgba(255, 255, 255, 0.25);
+    font-size: $font-size-xs;
+    margin-bottom: $spacing-sm;
+  }
+
+  .pName {
+    font-size: $font-size-xxl;
+    font-weight: $font-weight-bold;
+    line-height: 1.3;
+    margin-bottom: $spacing-xs;
+  }
+
+  .pDesc {
+    font-size: $font-size-sm;
+    opacity: 0.9;
+    margin-bottom: $spacing-lg;
+    line-height: 1.5;
+  }
+
+  .priceRow {
+    display: flex;
+    gap: $spacing-md;
+
+    .priceItem {
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(10rpx);
+      border-radius: $radius-md;
+      padding: $spacing-md;
+      flex: 1;
+      text-align: center;
+
+      .piLabel {
+        font-size: $font-size-xs;
+        opacity: 0.85;
+        margin-bottom: 6rpx;
+      }
+
+      .piValue {
+        font-size: $font-size-xl;
+        font-weight: $font-weight-bold;
+      }
+    }
+  }
+}
+
+.sectionBlock {
+  margin-bottom: $spacing-lg;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-xs 0;
+  margin-bottom: $spacing-sm;
+
+  .titleText {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+  }
+
+  .countBadge {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+  }
+}
+
+.recipeList {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-sm $spacing-lg;
+  box-shadow: $shadow-card;
+}
+
+.recipeItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md 0;
+
+  &:not(:last-child) {
+    border-bottom: 1rpx solid $color-divider;
+  }
+
+  .riIcon {
+    width: 72rpx;
+    height: 72rpx;
+    border-radius: $radius-md;
+    background: $color-primary-bg;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36rpx;
+    flex-shrink: 0;
+  }
+
+  .riInfo {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .riName {
+    font-size: $font-size-md;
+    font-weight: $font-weight-medium;
+    color: $color-text-primary;
+    margin-bottom: 4rpx;
+  }
+
+  .riUnit {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+  }
+
+  .riAmount {
+    text-align: right;
+    flex-shrink: 0;
+
+    .num {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-bold;
+      color: $color-primary;
+    }
+    .unit {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+      margin-left: 4rpx;
+    }
+  }
+
+  .riCost {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-cost;
+    width: 100rpx;
+    text-align: right;
+    flex-shrink: 0;
+  }
+}
+
+.costSummary {
+  background: linear-gradient(135deg, rgba(126, 211, 33, 0.08) 0%, rgba(255, 138, 80, 0.08) 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+
+  .summaryRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-sm 0;
+
+    &:not(:last-child) {
+      border-bottom: 1rpx dashed $color-divider;
+    }
+  }
+
+  .sLabel {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+
+  .sValue {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+
+    &.cost { color: $color-cost; }
+    &.price { color: $color-price; }
+    &.profit { color: $color-profit; }
+    &.rate { color: $color-info; }
+  }
+
+  .sBig {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+
+    &.profit { color: $color-profit; }
+  }
+}
+
+.bottomBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: $spacing-md $page-padding calc($spacing-md + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: $spacing-md;
+
+  .btn {
+    @include button-reset;
+    flex: 1;
+    height: $button-height-lg;
+    border-radius: $radius-button;
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    transition: all $transition-base;
+
+    &:active {
+      opacity: 0.9;
+      transform: scale(0.98);
+    }
+
+    &.edit {
+      background: $color-bg-hover;
+      color: $color-primary;
+    }
+
+    &.make {
+      background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+      color: #fff;
+      box-shadow: 0 4rpx 16rpx rgba(255, 138, 80, 0.35);
+    }
+  }
+}
+
+.pageContent {
+  padding-bottom: 160rpx;
+}

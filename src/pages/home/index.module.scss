@@ -1,0 +1,288 @@
+@use '@/styles/variables.scss' as *;
+
+.header {
+  padding: $spacing-md $page-padding $spacing-lg;
+  margin: 0 (-$page-padding) $spacing-md;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: 0 0 $radius-xl $radius-xl;
+  color: $color-text-white;
+
+  .greeting {
+    font-size: $font-size-sm;
+    opacity: 0.9;
+    margin-bottom: $spacing-xs;
+  }
+
+  .title {
+    font-size: $font-size-xxl;
+    font-weight: $font-weight-bold;
+    margin-bottom: $spacing-lg;
+  }
+
+  .statsRow {
+    display: flex;
+    gap: $spacing-md;
+  }
+
+  .statCard {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: $radius-lg;
+    padding: $spacing-md;
+    backdrop-filter: blur(10rpx);
+
+    .statLabel {
+      font-size: $font-size-xs;
+      opacity: 0.85;
+      margin-bottom: 6rpx;
+    }
+
+    .statValue {
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+    }
+
+    .statUnit {
+      font-size: $font-size-xs;
+      font-weight: $font-weight-normal;
+      opacity: 0.85;
+    }
+  }
+}
+
+.warningSection {
+  margin-bottom: $spacing-lg;
+
+  .warningList {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+  }
+
+  .warningItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $spacing-md;
+    background: rgba(245, 63, 63, 0.08);
+    border: 1rpx solid rgba(245, 63, 63, 0.2);
+    border-radius: $radius-md;
+
+    .warningLeft {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .warningIcon {
+      width: 56rpx;
+      height: 56rpx;
+      border-radius: $radius-round;
+      background: rgba(245, 63, 63, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28rpx;
+      flex-shrink: 0;
+    }
+
+    .warningInfo {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .warningName {
+      font-size: $font-size-md;
+      font-weight: $font-weight-medium;
+      color: $color-text-primary;
+      @include text-ellipsis;
+    }
+
+    .warningText {
+      font-size: $font-size-xs;
+      color: $color-stock-warning;
+      margin-top: 2rpx;
+    }
+  }
+}
+
+.categoryTabs {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+  overflow-x: auto;
+  padding-bottom: $spacing-xs;
+
+  .tabItem {
+    flex-shrink: 0;
+    padding: $spacing-sm $spacing-lg;
+    border-radius: $radius-button;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    background: $color-bg-card;
+    color: $color-text-secondary;
+    box-shadow: $shadow-card;
+    transition: all $transition-base;
+    white-space: nowrap;
+
+    &.active {
+      background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+      color: $color-text-white;
+      box-shadow: 0 4rpx 16rpx rgba(255, 138, 80, 0.35);
+    }
+  }
+}
+
+.productList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.productCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.99);
+    box-shadow: $shadow-card-hover;
+  }
+
+  &.disabled {
+    opacity: 0.6;
+  }
+
+  .cardHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: $spacing-md;
+  }
+
+  .productInfo {
+    flex: 1;
+    min-width: 0;
+    margin-right: $spacing-md;
+  }
+
+  .productName {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin-bottom: $spacing-xs;
+    @include text-ellipsis;
+  }
+
+  .productDesc {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    @include text-ellipsis-multi(1);
+  }
+
+  .categoryTag {
+    padding: 6rpx 16rpx;
+    border-radius: $radius-sm;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .priceRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-md;
+    padding: $spacing-sm $spacing-md;
+    background: $color-bg-page;
+    border-radius: $radius-md;
+  }
+
+  .priceItem {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .priceLabel {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    margin-bottom: 4rpx;
+  }
+
+  .priceValue {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+
+    &.sellPrice {
+      color: $color-price;
+    }
+
+    &.costPrice {
+      color: $color-cost;
+    }
+
+    &.profitValue {
+      color: $color-profit;
+    }
+  }
+
+  .cardFooter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .stockInfo {
+    font-size: $font-size-xs;
+
+    &.safe {
+      color: $color-stock-safe;
+    }
+
+    &.warning {
+      color: $color-stock-normal;
+    }
+
+    &.danger {
+      color: $color-stock-warning;
+    }
+  }
+
+  .makeBtn {
+    @include button-reset;
+    height: $button-height-sm;
+    padding: 0 $spacing-lg;
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    color: $color-text-white;
+    border-radius: $radius-button;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    transition: all $transition-base;
+
+    &:active {
+      opacity: 0.9;
+      transform: scale(0.96);
+    }
+
+    &.disabled {
+      background: $color-border;
+      color: $color-text-tertiary;
+    }
+  }
+}
+
+.emptyWrapper {
+  padding: $spacing-xl * 2;
+  text-align: center;
+}
+
+.emptyText {
+  color: $color-text-tertiary;
+  font-size: $font-size-sm;
+}
